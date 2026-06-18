@@ -77,8 +77,21 @@ export default function InboxClient({ initialEmails, session }: { initialEmails:
   const handleSync = async () => {
     setIsSyncing(true);
     try {
-      await fetch("/api/sync-emails", { method: "POST" });
+      const res = await fetch("/api/sync-emails", { method: "POST" });
+      const data = await res.json();
       router.refresh();
+
+      if (data.newEvents && data.newEvents.length > 0) {
+        const ev = data.newEvents[0];
+        window.dispatchEvent(new CustomEvent("open-compose-event", { 
+          detail: { 
+            title: ev.title || "", 
+            date: ev.date || "", 
+            time: ev.time || "", 
+            attendees: ev.attendees || "" 
+          } 
+        }));
+      }
     } catch (e) {
       console.error(e);
     }

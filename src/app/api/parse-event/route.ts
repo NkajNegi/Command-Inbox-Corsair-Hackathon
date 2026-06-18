@@ -24,7 +24,7 @@ Read the provided email subject and snippet and extract the most likely meeting 
 Return a JSON object with the following keys:
 - "title": A short summary (e.g. "Dinner with Ashish"). Use subject if not sure.
 - "date": MUST be strictly in YYYY-MM-DD format based on today's date (e.g. if today is 2026-06-18 and it says "tomorrow", output "2026-06-19"). Do not output words like "Tomorrow". If no date is found, leave as empty string.
-- "time": MUST be strictly in HH:MM (24-hour format). If no time is found, default to "12:00".
+- "time": MUST be strictly in HH:MM (24-hour format). If no time is found, leave as an empty string "".
 - "attendees": Comma-separated list of emails if present, otherwise empty string.
 
 Respond ONLY with valid JSON.`;

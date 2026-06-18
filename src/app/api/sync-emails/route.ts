@@ -107,7 +107,7 @@ Return a JSON object with a single key "events" containing an array of objects.
 Each object must have:
 - "title": A short summary (e.g. "Dinner with Ashish")
 - "date": MUST be strictly in YYYY-MM-DD format based on today's date (e.g. if today is 2026-06-18 and it says "tomorrow", output "2026-06-19"). Do not output words like "Tomorrow".
-- "time": MUST be strictly in HH:MM (24-hour format). Default to "12:00" if no specific time is mentioned.
+- "time": MUST be strictly in HH:MM (24-hour format). If no specific time is mentioned, leave as an empty string "".
 - "attendees": Comma-separated list of emails if present, otherwise empty string
 - "priority": "high" (business/urgent), "medium" (social/dinner), or "low" (deliveries/FYI)
 
@@ -122,27 +122,18 @@ If no events are found, return { "events": [] }. Respond ONLY with valid JSON.`;
           response_format: { type: "json_object" }
         });
 
+        let aiEvents: any[] = [];
         const reply = completion.choices[0]?.message?.content;
         if (reply) {
           const parsed = JSON.parse(reply);
           if (parsed.events && Array.isArray(parsed.events)) {
-            for (const ev of parsed.events) {
-              console.log(`[AI Triage] Automatically scheduling: ${ev.title}`);
-              await executeScheduleEvent(
-                token, 
-                session.user.id, 
-                ev.title, 
-                ev.date, 
-                ev.time, 
-                ev.attendees || "", 
-                ev.priority || "medium",
-                "ai-auto-event-"
-              );
-            }
+            aiEvents = parsed.events;
+            console.log(`[AI Triage] Found ${aiEvents.length} events to propose.`);
           }
         }
+        return NextResponse.json({ success: true, count: syncedCount, newEvents: aiEvents });
       } catch (aiError) {
-        console.error("[AI Triage] Failed to auto-schedule events:", aiError);
+        console.error("[AI Triage] Failed to parse events:", aiError);
       }
     }
 
