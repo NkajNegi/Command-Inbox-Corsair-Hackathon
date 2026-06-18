@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
+import { auth } from "@/auth";
 import { corsair } from "@/corsair";
 
 export async function POST(req: Request) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
     const { to, subject, body } = await req.json();
 
     if (!to || !subject || !body) {
@@ -31,10 +35,10 @@ export async function POST(req: Request) {
 
     let sendResponse;
     try {
-      sendResponse = await corsair.gmail.api.messages.send({
-        userId: "me",
-        raw: encodedMessage,
-      });
+      sendResponse = await corsair.gmail.api.messages.send(
+        { userId: "me", raw: encodedMessage },
+        { tenantId: session.user.id }
+      );
     } catch (e) {
       console.warn("Actual Gmail send failed (sandbox scopes/auth missing). Falling back to mock sync logger.", e);
       sendResponse = { id: "mock-sent-id-" + Date.now() };

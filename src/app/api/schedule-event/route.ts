@@ -29,16 +29,19 @@ export async function POST(req: Request) {
     let insertResponse;
     let googleEventId = "mock-event-id-" + Date.now();
     try {
-      insertResponse = await corsair.googlecalendar.api.events.create({
-        calendarId: "primary",
-        event: {
-          summary: title,
-          location: location || "",
-          start: { dateTime: startDateTime.toISOString() },
-          end: { dateTime: endDateTime.toISOString() },
-          attendees: attendeesList
-        }
-      });
+      insertResponse = await corsair.googlecalendar.api.events.create(
+        {
+          calendarId: "primary",
+          event: {
+            summary: title,
+            location: location || "",
+            start: { dateTime: startDateTime.toISOString() },
+            end: { dateTime: endDateTime.toISOString() },
+            attendees: attendeesList
+          }
+        },
+        { tenantId: session.user.id }
+      );
       if (insertResponse && insertResponse.id) {
         googleEventId = insertResponse.id;
       }

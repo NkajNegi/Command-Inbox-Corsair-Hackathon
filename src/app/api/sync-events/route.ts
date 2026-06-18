@@ -12,14 +12,16 @@ export async function POST() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Fetch next 50 upcoming events
-    const listResponse = await corsair.googlecalendar.api.events.getMany({ 
-      calendarId: "primary",
-      timeMin: new Date().toISOString(),
-      maxResults: 50,
-      singleEvents: true,
-      orderBy: "startTime"
-    });
+    let listResponse;
+    try {
+      listResponse = await corsair.googlecalendar.api.events.list(
+        { timeMin: new Date().toISOString(), maxResults: 10, singleEvents: true, orderBy: "startTime" },
+        { tenantId: session.user.id }
+      );
+    } catch (e) {
+      console.warn("Corsair calendar integration not linked yet or failed:", e);
+      return NextResponse.json({ success: true, count: 0, unlinked: true });
+    }
     
     if (!listResponse?.items) {
       return NextResponse.json({ success: true, count: 0 });

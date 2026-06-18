@@ -12,8 +12,16 @@ export async function POST() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Fetch latest 10 messages metadata from Gmail
-    const listResponse = await corsair.gmail.api.messages.list({ maxResults: 10 });
+    let listResponse;
+    try {
+      listResponse = await corsair.gmail.api.messages.list(
+        { maxResults: 10 },
+        { tenantId: session.user.id }
+      );
+    } catch (e) {
+      console.warn("Corsair integration not linked yet or failed:", e);
+      return NextResponse.json({ success: true, count: 0, unlinked: true });
+    }
     
     if (!listResponse?.messages) {
       return NextResponse.json({ success: true, count: 0 });
@@ -33,11 +41,14 @@ export async function POST() {
       if (existing) continue;
 
       // Get full metadata
-      const details = await corsair.gmail.api.messages.get({ 
-        id: msg.id, 
-        format: "metadata", 
-        metadataHeaders: ["Subject", "From", "To"] 
-      });
+      const details = await corsair.gmail.api.messages.get(
+        { 
+          id: msg.id, 
+          format: "metadata", 
+          metadataHeaders: ["Subject", "From", "To"] 
+        },
+        { tenantId: session.user.id }
+      );
 
       const headers = details.payload?.headers || [];
       const subject = headers.find((h: { name?: string; value?: string | null }) => h.name === "Subject")?.value || "No Subject";
