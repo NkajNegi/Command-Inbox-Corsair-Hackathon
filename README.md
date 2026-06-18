@@ -1,11 +1,55 @@
 # Command Inbox: Cybernetic Workflow Edition ⚡
 
-## Overview
-When you use Gmail or Google Calendar, a regular workflow usually takes a few more clicks than it should. Sending a calendar invite or managing your daily triage often involves tedious UI steps that slow down power users. 
+## 🎯 Exactly What We Are Building
+**Command Inbox** is a hyper-fast, keyboard-driven email and calendar management application styled with a sleek, cyberpunk/synthwave "CRT terminal" aesthetic. 
 
-**Command Inbox** is a Superhuman-style email and calendar management application built entirely to fix this. It leverages native Google APIs to completely bypass the traditional Gmail/Calendar interfaces, giving you a lightning-fast, keyboard-driven, and highly intuitive workspace designed exactly how a power user needs it.
+It is designed to feel like a command center for power users. Instead of the standard, bloated Google interfaces, users get a minimalist, high-contrast dashboard where they can triage emails, manage their schedule, and invoke autonomous AI agents to handle tedious tasks.
 
-Built for the **MacBook Giveaway Hackathon**, this project empowers users to search, draft, send, receive emails, and schedule events seamlessly without the lag of traditional clients.
+## 💡 Why We Are Building It
+When you use Gmail or Google Calendar natively, a regular workflow usually takes a few more clicks than it should. Managing your daily triage often involves bouncing between different tabs, waiting for UIs to load, and dealing with visual clutter. 
+
+Many startups (like Superhuman) have tried to make email and calendar management seamless, but they force you into *their* specific workflow. We are building Command Inbox using **Corsair** building blocks to bypass these limitations. By directly wiring into Google's APIs, we provide a blazingly fast frontend tailored exactly for speed, ensuring your email and calendar management is never limited by how Google thinks you should work.
+
+## 🗺️ The UI Flow & Experience
+1. **Authentication:** The user logs in via Google OAuth (powered by NextAuth).
+2. **The Terminal Dashboard:** The user is greeted by a dark, neon-accented interface. 
+3. **Inbox Triage:** On the left, emails are listed chronologically. Clicking an email opens it instantly. High-priority emails (determined by AI) are flagged with warning colors. 
+4. **Calendar Grid:** On the right, the calendar dynamically displays upcoming events. The user can toggle between a simple timeline and a full monthly grid view. Expired past events are automatically filtered out.
+5. **Agent Chat:** At the bottom right, a glowing button summons the **Decrypt AI Agent**. The user can type or use voice dictation to ask the agent to search emails or schedule meetings without ever leaving the dashboard.
+6. **Control Panel:** A dedicated settings page allows the user to switch the AI processor on the fly (e.g., from Llama-3 to Mixtral) and configure auto-decryption animations.
+
+---
+
+## ⚡ Core Features (The "Must-Haves")
+These are the foundational requirements integrated via native Google REST APIs:
+- **Gmail Integration:** 
+  - Sync and display the user's latest emails.
+  - Read email contents securely.
+  - Draft and send new emails directly from the dashboard using the Gmail API tunnel.
+- **Google Calendar Integration:**
+  - Sync and display the user's upcoming events.
+  - Filter out expired events so the UI remains focused on the future.
+  - Create and schedule new calendar invites, automatically adding attendees.
+
+## 🎁 Extra Features (The "Bonus Tasks")
+We went above and beyond to integrate powerful workflows and AI capabilities:
+
+### 1. Autonomous Agent Chat (Corsair MCP Style)
+We integrated a dynamic AI Agent directly into the interface. You can chat with the agent to execute complex workflows automatically:
+- *"Check my inbox for messages and add schedules to the schedule log."*
+- *"Send a calendar invite to friend@corsair.dev at 9 AM next Thursday. Send him an email too saying I look forward to our meeting."*
+The agent natively parses your recent emails, extracts dates/times, and invokes tools to schedule events and send emails on your behalf.
+
+### 2. Lightning-Fast Local Search (Vector Database)
+We added a vector database (`pgvector`) to the existing Postgres database. Emails are cached and embedded locally, allowing you to perform semantic, lightning-fast searches across your entire email history in under 1 second without ever waiting on the Gmail API.
+
+### 3. Automatic AI Priority Filtering
+All synced emails are automatically passed through a lightning-fast Groq LLM to determine their priority level based on the subject and body. High-priority emails are instantly highlighted in the UI so you never miss critical messages.
+
+### 4. Keyboard Driven Actions
+The application is wired with keystrokes (e.g., `Cmd + Enter` to send emails), allowing power users to perform common actions instantly without clicking around.
+
+---
 
 ## 🛠 Tech Stack
 - **Framework**: Next.js 16 (App Router)
@@ -14,26 +58,6 @@ Built for the **MacBook Giveaway Hackathon**, this project empowers users to sea
 - **Authentication**: NextAuth.js (Google Provider)
 - **Styling**: TailwindCSS & Framer Motion
 - **AI Models**: Groq API (Llama-3-70b / Mixtral-8x7b)
-
-## 🚀 Features & Workflow Improvements
-
-### 1. Lightning-Fast Local Search (Bonus Completed)
-We added a vector database (`pgvector`) to the existing Postgres database. Emails are cached and embedded locally, allowing you to perform semantic, lightning-fast searches across your entire email history in under 1 second without hitting the Gmail API.
-
-### 2. Autonomous Agent Chat (Bonus Completed)
-We integrated a dynamic AI Agent directly into the interface. You can chat with the agent to execute complex workflows automatically:
-- *"Check my inbox for messages and add schedules to the schedule log."*
-- *"Send a calendar invite to friend@corsair.dev at 9 AM next Thursday. Send him an email too saying I look forward to our meeting."*
-The agent natively parses your recent emails, extracts dates/times, and invokes tools to schedule events and send emails on your behalf.
-
-### 3. Automatic AI Priority Filtering (Bonus Completed)
-All synced emails are automatically passed through a lightning-fast Groq LLM to determine their priority level based on the subject and body. High-priority emails are instantly highlighted in the UI so you never miss critical messages.
-
-### 4. Keyboard Driven Actions (Bonus Completed)
-The entire application is wired with keystrokes (e.g., `Cmd + Enter` to send emails), allowing users to perform common actions instantly without clicking around.
-
-### 5. Intuitive Calendar Grid
-The calendar isn't just a vertical list; it includes a dynamic Monthly Grid View that visually slots your Google Calendar events perfectly into a cohesive, highly scannable timeline, while filtering out expired past events.
 
 ## 📦 Setup & Installation
 
