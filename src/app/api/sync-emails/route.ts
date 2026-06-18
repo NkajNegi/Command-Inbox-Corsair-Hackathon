@@ -24,8 +24,9 @@ export async function POST() {
 
     const token = account.access_token;
 
-    // Fetch message IDs
-    const listRes = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=50", {
+    // Fetch message IDs (excluding spam, trash, promotions, and social tabs)
+    const searchQuery = encodeURIComponent("-label:SPAM -label:TRASH -category:promotions -category:social");
+    const listRes = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=50&q=${searchQuery}`, {
       headers: { Authorization: `Bearer ${token}` }
     });
 
