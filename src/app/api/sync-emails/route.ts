@@ -25,7 +25,7 @@ export async function POST() {
     const token = account.access_token;
 
     // Fetch message IDs
-    const listRes = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=10", {
+    const listRes = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=50", {
       headers: { Authorization: `Bearer ${token}` }
     });
 
