@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Terminal, Activity, Sliders, Key, Database, Cpu, Check, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import type { Session } from "next-auth";
@@ -14,13 +14,27 @@ export default function SettingsClient({ session }: { session: Session }) {
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
+  useEffect(() => {
+    const savedAutoDecrypt = localStorage.getItem("corsair_auto_decrypt");
+    if (savedAutoDecrypt !== null) setAutoDecrypt(savedAutoDecrypt === "true");
+    
+    const savedModel = localStorage.getItem("corsair_ai_model");
+    if (savedModel) setModel(savedModel);
+    
+    const savedCipher = localStorage.getItem("corsair_cipher");
+    if (savedCipher) setCipher(savedCipher);
+  }, []);
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
     setSaveSuccess(false);
 
-    // Simulate saving delay
+    // Simulate saving delay and persist
     setTimeout(() => {
+      localStorage.setItem("corsair_auto_decrypt", autoDecrypt.toString());
+      localStorage.setItem("corsair_ai_model", model);
+      localStorage.setItem("corsair_cipher", cipher);
       setIsSaving(false);
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);

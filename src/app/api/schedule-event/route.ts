@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { corsair } from "@/corsair";
 import { db } from "@/db";
 import { events } from "@/db/schema";
 

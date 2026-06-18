@@ -120,7 +120,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { message } = await req.json();
+    const { message, model } = await req.json();
 
     if (!message) {
       return NextResponse.json({ error: "Message is required" }, { status: 400 });
@@ -200,8 +200,10 @@ export async function POST(req: Request) {
       { role: "user", content: message }
     ];
 
+    const selectedModel = model || "llama-3.3-70b-versatile";
+
     const completion = await groq.chat.completions.create({
-      model: "llama-3.3-70b-versatile",
+      model: selectedModel,
       messages: messages as unknown as Parameters<typeof groq.chat.completions.create>[0]["messages"],
       tools: tools as unknown as Parameters<typeof groq.chat.completions.create>[0]["tools"],
     });
@@ -238,7 +240,7 @@ export async function POST(req: Request) {
 
       // Get final completion from LLM after tool calls
       const finalCompletion = await groq.chat.completions.create({
-        model: "llama-3.3-70b-versatile",
+        model: selectedModel,
         messages: messages as unknown as Parameters<typeof groq.chat.completions.create>[0]["messages"],
       });
 

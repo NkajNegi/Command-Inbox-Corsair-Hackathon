@@ -28,10 +28,12 @@ export default function AgentChat() {
     setLoading(true);
 
     try {
+      const savedModel = localStorage.getItem("corsair_ai_model") || "llama-3.3-70b-versatile";
+      
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userMsg }),
+        body: JSON.stringify({ message: userMsg, model: savedModel }),
       });
       
       const data = await res.json();

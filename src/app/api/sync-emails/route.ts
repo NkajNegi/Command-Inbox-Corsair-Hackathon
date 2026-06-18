@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { corsair } from "@/corsair";
 import { db } from "@/db";
 import { emails } from "@/db/schema";
 import { eq } from "drizzle-orm";
@@ -64,9 +63,9 @@ export async function POST() {
         const details = await detailsRes.json();
 
         const headers = details.payload?.headers || [];
-        const subject = headers.find((h: any) => h.name === "Subject")?.value || "No Subject";
-        const from = headers.find((h: any) => h.name === "From")?.value || "Unknown";
-        const to = headers.find((h: any) => h.name === "To")?.value || session.user.email || "Me";
+        const subject = headers.find((h: { name: string; value: string }) => h.name === "Subject")?.value || "No Subject";
+        const from = headers.find((h: { name: string; value: string }) => h.name === "From")?.value || "Unknown";
+        const to = headers.find((h: { name: string; value: string }) => h.name === "To")?.value || session.user.email || "Me";
         
         const internalDate = details.internalDate 
           ? new Date(Number(details.internalDate)) 

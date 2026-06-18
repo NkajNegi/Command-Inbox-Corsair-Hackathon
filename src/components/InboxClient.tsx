@@ -3,7 +3,7 @@
 import { useState } from "react";
 import EmailList, { type Email } from "@/components/EmailList";
 import EmailDetail from "@/components/EmailDetail";
-import { RefreshCw, Terminal, Activity } from "lucide-react";
+import { RefreshCw, Terminal, Activity, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 import Link from "next/link";
@@ -89,6 +89,14 @@ export default function InboxClient({ initialEmails, session }: { initialEmails:
           >
             <RefreshCw size={11} className={isSyncing ? "animate-spin text-amber-400" : "text-amber-550"} />
             <span>{isSyncing ? "SYNCING..." : "SYNC INBOX"}</span>
+          </button>
+          
+          <button 
+            onClick={() => window.dispatchEvent(new CustomEvent("open-compose-email"))}
+            className="flex items-center gap-2 text-[10px] font-mono font-bold text-zinc-950 transition-all px-3.5 py-1.5 rounded bg-amber-500 hover:bg-amber-400 cursor-pointer shadow-md shadow-amber-500/10 border border-amber-400/20"
+          >
+            <Plus size={11} />
+            <span>COMPOSE</span>
           </button>
           
           <div className="flex items-center gap-2.5 border-l border-[#232029] pl-3">
