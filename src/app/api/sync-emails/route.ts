@@ -4,6 +4,8 @@ import { db } from "@/db";
 import { emails } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { getValidAccessToken } from "@/lib/googleAuth";
+import { executeScheduleEvent } from "@/lib/eventScheduler";
+import { Groq } from "groq-sdk";
 
 export const dynamic = "force-dynamic";
 
@@ -39,6 +41,7 @@ export async function POST() {
     }
 
     let syncedCount = 0;
+    const newEmailsForAiProcessing: { subject: string; snippet: string; from: string }[] = [];
 
     // Fetch details for each message and save to DB
     for (const msg of listData.messages) {
@@ -86,8 +89,60 @@ export async function POST() {
         });
 
         syncedCount++;
+        newEmailsForAiProcessing.push({ subject, snippet: details.snippet || "", from });
       } catch (innerError) {
         console.error(`Failed to process message ${msg.id}:`, innerError);
+      }
+    }
+
+    // --- Automated AI Triage Pipeline ---
+    if (newEmailsForAiProcessing.length > 0 && process.env.GROQ_API_KEY) {
+      try {
+        console.log(`[AI Triage] Scanning ${newEmailsForAiProcessing.length} new emails for events...`);
+        const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+        
+        const systemPrompt = `You are an automated triage agent. The current date/time is ${new Date().toISOString()}.
+Your job is to read the provided recent emails and extract any meetings, dinners, travel plans, or scheduled deliveries.
+Return a JSON object with a single key "events" containing an array of objects.
+Each object must have:
+- "title": A short summary (e.g. "Dinner with Ashish")
+- "date": YYYY-MM-DD
+- "time": HH:MM (24-hour format)
+- "attendees": Comma-separated list of emails if present, otherwise empty string
+- "priority": "high" (business/urgent), "medium" (social/dinner), or "low" (deliveries/FYI)
+
+If no events are found, return { "events": [] }. Respond ONLY with valid JSON.`;
+
+        const completion = await groq.chat.completions.create({
+          model: "llama-3.3-70b-versatile",
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: JSON.stringify(newEmailsForAiProcessing) }
+          ],
+          response_format: { type: "json_object" }
+        });
+
+        const reply = completion.choices[0]?.message?.content;
+        if (reply) {
+          const parsed = JSON.parse(reply);
+          if (parsed.events && Array.isArray(parsed.events)) {
+            for (const ev of parsed.events) {
+              console.log(`[AI Triage] Automatically scheduling: ${ev.title}`);
+              await executeScheduleEvent(
+                token, 
+                session.user.id, 
+                ev.title, 
+                ev.date, 
+                ev.time, 
+                ev.attendees || "", 
+                ev.priority || "medium",
+                "ai-auto-event-"
+              );
+            }
+          }
+        }
+      } catch (aiError) {
+        console.error("[AI Triage] Failed to auto-schedule events:", aiError);
       }
     }
 
