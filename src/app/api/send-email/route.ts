@@ -14,7 +14,7 @@ export async function POST(req: Request) {
     }
 
     const account = await db.query.accounts.findFirst({
-      where: (accounts, { and, eq }) => and(eq(accounts.userId, session.user.id), eq(accounts.provider, 'google'))
+      where: (accounts, { and, eq }) => and(eq(accounts.userId, session.user!.id!), eq(accounts.provider, 'google'))
     });
 
     if (!account?.access_token) {

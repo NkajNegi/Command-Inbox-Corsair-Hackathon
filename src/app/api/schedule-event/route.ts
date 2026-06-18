@@ -27,7 +27,7 @@ export async function POST(req: Request) {
     console.log(`[Corsair SDK Execution] Inserting event to Google Calendar: ${title} at ${startDateTime.toISOString()}`);
 
     const account = await db.query.accounts.findFirst({
-      where: (accounts, { and, eq }) => and(eq(accounts.userId, session.user.id), eq(accounts.provider, "google"))
+      where: (accounts, { and, eq }) => and(eq(accounts.userId, session.user!.id!), eq(accounts.provider, "google"))
     });
 
     let googleEventId = "mock-event-id-" + Date.now();

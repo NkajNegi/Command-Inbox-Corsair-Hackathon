@@ -15,7 +15,7 @@ export async function POST() {
     // Since this is a Hackathon and Corsair OAuth isn't wired up to a UI link button,
     // we use the NextAuth Google access token which has the correct mail scopes!
     const account = await db.query.accounts.findFirst({
-      where: (accounts, { and, eq }) => and(eq(accounts.userId, session.user.id), eq(accounts.provider, "google"))
+      where: (accounts, { and, eq }) => and(eq(accounts.userId, session.user!.id!), eq(accounts.provider, "google"))
     });
 
     if (!account?.access_token) {
