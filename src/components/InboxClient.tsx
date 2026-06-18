@@ -11,10 +11,30 @@ import type { Session } from "next-auth";
 
 export default function InboxClient({ initialEmails, session }: { initialEmails: Email[], session: Session }) {
   const [selectedId, setSelectedId] = useState<string | null>(initialEmails[0]?.id || null);
+  const [hiddenEmailIds, setHiddenEmailIds] = useState<Set<string>>(new Set());
   const [isSyncing, setIsSyncing] = useState(false);
   const router = useRouter();
 
-  const selectedEmail = initialEmails.find(e => e.id === selectedId) || null;
+  const displayEmails = initialEmails.filter(e => !hiddenEmailIds.has(e.id));
+  const selectedEmail = displayEmails.find(e => e.id === selectedId) || null;
+
+  const handleActionComplete = (id: string) => {
+    // Hide the email immediately for instantaneous UI response
+    setHiddenEmailIds(prev => {
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+    
+    // Select the next available email, or null if empty
+    const currentIndex = displayEmails.findIndex(e => e.id === id);
+    if (currentIndex !== -1) {
+      const nextEmail = displayEmails[currentIndex + 1] || displayEmails[currentIndex - 1] || null;
+      setSelectedId(nextEmail?.id || null);
+    } else {
+      setSelectedId(null);
+    }
+  };
 
   const handleSync = async () => {
     setIsSyncing(true);
@@ -95,7 +115,7 @@ export default function InboxClient({ initialEmails, session }: { initialEmails:
         {/* Left Column Pane (Email List Queue) */}
         <div className={`w-full md:w-[380px] shrink-0 border-r border-[#232029] h-full bg-[#0b0a0d]/40 ${selectedId ? 'hidden md:flex flex-col' : 'flex flex-col'}`}>
           <EmailList 
-            emails={initialEmails} 
+            emails={displayEmails} 
             selectedId={selectedId} 
             onSelect={setSelectedId} 
           />
@@ -106,7 +126,11 @@ export default function InboxClient({ initialEmails, session }: { initialEmails:
           {/* Tactical L-Bracket Frames inside main view */}
           <div className="absolute top-0 left-0 w-2.5 h-2.5 border-t-2 border-l-2 border-amber-500/20 pointer-events-none z-10" />
           <div className="absolute bottom-0 right-0 w-2.5 h-2.5 border-b-2 border-r-2 border-amber-500/20 pointer-events-none z-10" />
-          <EmailDetail email={selectedEmail} onBack={() => setSelectedId(null)} />
+          <EmailDetail 
+            email={selectedEmail} 
+            onBack={() => setSelectedId(null)} 
+            onActionComplete={handleActionComplete}
+          />
         </div>
       </div>
     </div>

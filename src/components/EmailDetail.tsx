@@ -9,9 +9,10 @@ import { useRouter } from "next/navigation";
 interface EmailDetailProps {
   email: Email | null;
   onBack?: () => void;
+  onActionComplete?: (id: string) => void;
 }
 
-export default function EmailDetail({ email, onBack }: EmailDetailProps) {
+export default function EmailDetail({ email, onBack, onActionComplete }: EmailDetailProps) {
   const router = useRouter();
   const [replyText, setReplyText] = useState("");
   const [isSending, setIsSending] = useState(false);
@@ -20,6 +21,11 @@ export default function EmailDetail({ email, onBack }: EmailDetailProps) {
   const handleAction = async (action: "archive" | "delete") => {
     if (!email || isMutating) return;
     setIsMutating(true);
+    
+    // OPTIMISTIC UI: Instantly remove it from the screen
+    if (onActionComplete) onActionComplete(email.id);
+    if (onBack) onBack(); // On mobile, slide back instantly
+
     try {
       const res = await fetch("/api/email-action", {
         method: "POST",
@@ -27,7 +33,6 @@ export default function EmailDetail({ email, onBack }: EmailDetailProps) {
         body: JSON.stringify({ id: email.id, action }),
       });
       if (res.ok) {
-        if (onBack) onBack(); // Return to list view on mobile
         router.refresh();
       }
     } catch (e) {
@@ -115,7 +120,9 @@ export default function EmailDetail({ email, onBack }: EmailDetailProps) {
             >
               <Trash2 size={15} />
             </button>
-            <button className="p-2 text-zinc-500 hover:text-zinc-200 hover:bg-[#18161f] border border-transparent hover:border-[#232029] rounded transition-all cursor-pointer">
+            <button 
+              onClick={() => alert("Additional options menu not implemented in hackathon mode.")}
+              className="p-2 text-zinc-500 hover:text-zinc-200 hover:bg-[#18161f] border border-transparent hover:border-[#232029] rounded transition-all cursor-pointer">
               <MoreHorizontal size={15} />
             </button>
           </div>
