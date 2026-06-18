@@ -106,8 +106,8 @@ Your job is to read the provided recent emails and extract any meetings, dinners
 Return a JSON object with a single key "events" containing an array of objects.
 Each object must have:
 - "title": A short summary (e.g. "Dinner with Ashish")
-- "date": YYYY-MM-DD
-- "time": HH:MM (24-hour format)
+- "date": MUST be strictly in YYYY-MM-DD format based on today's date (e.g. if today is 2026-06-18 and it says "tomorrow", output "2026-06-19"). Do not output words like "Tomorrow".
+- "time": MUST be strictly in HH:MM (24-hour format). Default to "12:00" if no specific time is mentioned.
 - "attendees": Comma-separated list of emails if present, otherwise empty string
 - "priority": "high" (business/urgent), "medium" (social/dinner), or "low" (deliveries/FYI)
 

@@ -12,6 +12,12 @@ export async function executeScheduleEvent(
   corsairIdPrefix: string = "agent-event-id-"
 ) {
   const startDateTime = new Date(`${date}T${time}`);
+  if (isNaN(startDateTime.getTime())) {
+    console.warn(`[EventScheduler] Invalid date/time format provided: ${date}T${time}. Falling back to tomorrow.`);
+    const tmr = new Date();
+    tmr.setDate(tmr.getDate() + 1);
+    startDateTime.setTime(tmr.getTime());
+  }
   const endDateTime = new Date(startDateTime.getTime() + 60 * 60 * 1000); // 1 hour duration
   const attendeesList = attendees ? attendees.split(',').map((email: string) => ({ email: email.trim() })) : [];
 
@@ -49,17 +55,21 @@ export async function executeScheduleEvent(
   if (priority.toLowerCase() === "high") priorityScore = 1.0;
   if (priority.toLowerCase() === "low") priorityScore = 0.1;
 
-  // Insert in local DB
-  await db.insert(events).values({
-    corsairId: googleEventId,
-    summary: title,
-    location: "",
-    startTime: startDateTime,
-    endTime: endDateTime,
-    attendeesRaw: attendees || "",
-    priorityScore: priorityScore,
-    userId: userId,
-  });
+  // Insert in local DB with a try-catch to prevent crash if duplicate or invalid
+  try {
+    await db.insert(events).values({
+      corsairId: googleEventId,
+      summary: title,
+      location: "",
+      startTime: startDateTime,
+      endTime: endDateTime,
+      attendeesRaw: attendees || "",
+      priorityScore: priorityScore,
+      userId: userId,
+    });
+  } catch (dbError) {
+    console.error("[EventScheduler] Failed to insert event into local DB. It might already exist.", dbError);
+  }
 
   return { success: true, message: `Calendar event scheduled and cached locally with ${priority} priority`, eventId: googleEventId };
 }
