@@ -60,17 +60,6 @@ export default function Sidebar() {
             <kbd className="px-1.5 py-0.5 bg-zinc-950 border border-[#232029] rounded text-[9px] font-mono text-zinc-500">C</kbd>
           </div>
         </Link>
-
-        <Link href="/settings" className="flex items-center justify-between px-3 py-2.5 rounded border border-transparent hover:border-[#232029] hover:bg-[#18161f]/40 text-sm font-medium text-zinc-400 hover:text-zinc-100 transition-all group">
-          <div className="flex items-center gap-3">
-            <Settings size={16} className="text-zinc-500 group-hover:text-amber-400 transition-colors" />
-            <span className="font-mono text-xs uppercase tracking-wide">03 // Control Panel</span>
-          </div>
-          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-            <kbd className="px-1.5 py-0.5 bg-zinc-950 border border-[#232029] rounded text-[9px] font-mono text-zinc-500">G</kbd>
-            <kbd className="px-1.5 py-0.5 bg-zinc-950 border border-[#232029] rounded text-[9px] font-mono text-zinc-500">S</kbd>
-          </div>
-        </Link>
         
         <div className="pt-8 pb-2 px-2 text-[10px] font-mono font-bold text-zinc-500 tracking-widest uppercase">
           {"// telemetry_filters"}
