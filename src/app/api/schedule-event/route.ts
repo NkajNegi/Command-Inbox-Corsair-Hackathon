@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { events } from "@/db/schema";
+import { getValidAccessToken } from "@/lib/googleAuth";
 
 export async function POST(req: Request) {
   try {
@@ -25,16 +26,12 @@ export async function POST(req: Request) {
 
     console.log(`[Corsair SDK Execution] Inserting event to Google Calendar: ${title} at ${startDateTime.toISOString()}`);
 
-    const account = await db.query.accounts.findFirst({
-      where: (accounts, { and, eq }) => and(eq(accounts.userId, session.user!.id!), eq(accounts.provider, "google"))
-    });
-
     let googleEventId = "mock-event-id-" + Date.now();
     let insertResponse;
 
-    if (account?.access_token) {
-      const token = account.access_token;
-      
+    const token = await getValidAccessToken(session.user.id);
+
+    if (token) {
       const res = await fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events", {
         method: "POST",
         headers: {

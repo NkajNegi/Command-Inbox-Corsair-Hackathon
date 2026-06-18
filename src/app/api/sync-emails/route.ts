@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { emails } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { getValidAccessToken } from "@/lib/googleAuth";
 
 export const dynamic = "force-dynamic";
 
@@ -13,18 +14,12 @@ export async function POST() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Since this is a Hackathon and Corsair OAuth isn't wired up to a UI link button,
-    // we use the NextAuth Google access token which has the correct mail scopes!
-    const account = await db.query.accounts.findFirst({
-      where: (accounts, { and, eq }) => and(eq(accounts.userId, session.user!.id!), eq(accounts.provider, "google"))
-    });
-
-    if (!account?.access_token) {
-      console.warn("No Google access token found for user");
+    // Use automated token rotation to handle 1-hour expiration
+    const token = await getValidAccessToken(session.user.id);
+    if (!token) {
+      console.warn("No valid or refreshable Google access token found for user");
       return NextResponse.json({ success: true, count: 0, unlinked: true });
     }
-
-    const token = account.access_token;
 
     // Fetch message IDs (excluding spam, trash, promotions, and social tabs)
     const searchQuery = encodeURIComponent("-label:SPAM -label:TRASH -category:promotions -category:social");

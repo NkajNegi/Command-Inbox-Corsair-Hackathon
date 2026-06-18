@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { events } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
+import { getValidAccessToken } from "@/lib/googleAuth";
 
 export async function DELETE(req: Request) {
   try {
@@ -25,12 +26,9 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ error: "Event not found" }, { status: 404 });
     }
 
-    const account = await db.query.accounts.findFirst({
-      where: (accounts, { and, eq }) => and(eq(accounts.userId, session.user!.id!), eq(accounts.provider, "google"))
-    });
+    const token = await getValidAccessToken(session.user.id);
 
-    if (account?.access_token && eventRecord.corsairId) {
-      const token = account.access_token;
+    if (token && eventRecord.corsairId) {
       const sendUpdates = sendCancellationEmail ? "all" : "none";
       
       const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${eventRecord.corsairId}?sendUpdates=${sendUpdates}`, {

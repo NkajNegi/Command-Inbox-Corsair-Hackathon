@@ -5,7 +5,8 @@ import { corsair } from "@/corsair";
 import { db } from "@/db";
 import { events, emails } from "@/db/schema";
 import { auth } from "@/auth";
-import { desc } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
+import { getValidAccessToken } from "@/lib/googleAuth";
 
 interface ChatMessage {
   role: "system" | "user" | "assistant" | "tool";
@@ -119,11 +120,12 @@ async function executeSearchEmails(query: string) {
   return { success: true, results: results.map(r => ({ subject: r.subject, snippet: r.snippet, from: r.fromAddress })) };
 }
 
-async function executeGetRecentEmails(limit: number = 10) {
+async function executeGetRecentEmails(userId: string, limit: number = 10) {
   try {
     const recent = await db
       .select({ subject: emails.subject, snippet: emails.snippet, fromAddress: emails.fromAddress, date: emails.date })
       .from(emails)
+      .where(eq(emails.userId, userId))
       .orderBy(desc(emails.date))
       .limit(limit);
     return { success: true, results: recent };
@@ -146,10 +148,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Message is required" }, { status: 400 });
     }
 
-    const account = await db.query.accounts.findFirst({
-      where: (accounts, { and, eq }) => and(eq(accounts.userId, session.user!.id!), eq(accounts.provider, "google"))
-    });
-    const accessToken = account?.access_token || undefined;
+    const accessToken = await getValidAccessToken(session.user.id) || undefined;
 
     const groq = getGroqClient();
     if (!groq) {
@@ -263,7 +262,7 @@ export async function POST(req: Request) {
         } else if (functionName === "search_emails") {
           result = await executeSearchEmails(args.query);
         } else if (functionName === "get_recent_emails") {
-          result = await executeGetRecentEmails(args.limit || 10);
+          result = await executeGetRecentEmails(session.user.id, args.limit || 10);
         }
 
         messages.push({

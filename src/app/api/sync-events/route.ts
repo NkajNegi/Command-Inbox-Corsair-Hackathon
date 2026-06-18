@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { db } from "@/db";
 import { events } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { getValidAccessToken } from "@/lib/googleAuth";
 
 export async function POST() {
   try {
@@ -11,16 +12,11 @@ export async function POST() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const account = await db.query.accounts.findFirst({
-      where: (accounts, { and, eq }) => and(eq(accounts.userId, session.user!.id!), eq(accounts.provider, "google"))
-    });
-
-    if (!account?.access_token) {
-      console.warn("No Google access token found for user");
+    const token = await getValidAccessToken(session.user.id);
+    if (!token) {
+      console.warn("No valid or refreshable Google access token found for user");
       return NextResponse.json({ success: true, count: 0, unlinked: true });
     }
-
-    const token = account.access_token;
     const timeMin = new Date().toISOString();
     
     const listRes = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${encodeURIComponent(timeMin)}&maxResults=10&singleEvents=true&orderBy=startTime`, {
