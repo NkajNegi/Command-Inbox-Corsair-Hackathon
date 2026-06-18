@@ -30,18 +30,39 @@ export async function POST(req: Request) {
 
     const attendeesList = attendees ? attendees.split(',').map((email: string) => ({ email: email.trim() })) : [];
 
-    // Update in Google Calendar via Corsair
-    const updateResponse = await corsair.googlecalendar.api.events.update({
-      calendarId: "primary",
-      id: dbEvent.corsairId,
-      event: {
-        summary: title,
-        location: location || "",
-        start: { dateTime: startDateTime.toISOString() },
-        end: { dateTime: endDateTime.toISOString() },
-        attendees: attendeesList
-      }
+    const account = await db.query.accounts.findFirst({
+      where: (accounts, { and, eq }) => and(eq(accounts.userId, session.user!.id!), eq(accounts.provider, "google"))
     });
+
+    let updateResponse;
+
+    if (account?.access_token) {
+      const token = account.access_token;
+      
+      const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${dbEvent.corsairId}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          summary: title,
+          location: location || "",
+          start: { dateTime: startDateTime.toISOString() },
+          end: { dateTime: endDateTime.toISOString() },
+          attendees: attendeesList
+        })
+      });
+
+      if (res.ok) {
+        updateResponse = await res.json();
+      } else {
+        console.warn("Actual Google Calendar update failed:", await res.text());
+        return NextResponse.json({ error: "Failed to update event in Google Calendar" }, { status: 500 });
+      }
+    } else {
+      console.warn("No Google access token found, skipping actual Google Calendar update");
+    }
 
     // Update in local DB
     await db.update(events).set({

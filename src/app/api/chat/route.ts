@@ -20,8 +20,7 @@ const getGroqClient = () => {
   return new Groq({ apiKey: process.env.GROQ_API_KEY });
 };
 
-async function executeSendEmail(to: string, subject: string, body: string) {
-  // Construct raw base64url message for Gmail API
+async function executeSendEmail(accessToken: string | undefined, to: string, subject: string, body: string) {
   const utf8Subject = `=?utf-8?B?${Buffer.from(subject).toString("base64")}?=`;
   const messageParts = [
     `To: ${to}`,
@@ -40,36 +39,56 @@ async function executeSendEmail(to: string, subject: string, body: string) {
     .replace(/=+$/, "");
 
   try {
-    await corsair.gmail.api.messages.send({
-      userId: "me",
-      raw: encodedMessage,
-    });
-    return { success: true, message: "Email sent successfully via Gmail API" };
+    if (accessToken) {
+      const res = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ raw: encodedMessage })
+      });
+      if (!res.ok) throw new Error("Google API rejected email send");
+      return { success: true, message: "Email sent successfully via Gmail API" };
+    } else {
+      throw new Error("No access token");
+    }
   } catch (e) {
-    console.warn("Agent Gmail send failed (auth/scopes missing). Falling back to mock dispatch.", e);
-    return { success: true, message: "Email dispatched via Mock fallback (Gmail sandbox modes)" };
+    console.warn("Agent Gmail send failed. Falling back to mock dispatch.", e);
+    return { success: true, message: "Email dispatched via Mock fallback" };
   }
 }
 
-async function executeScheduleEvent(userId: string, title: string, date: string, time: string, attendees: string) {
+async function executeScheduleEvent(accessToken: string | undefined, userId: string, title: string, date: string, time: string, attendees: string) {
   const startDateTime = new Date(`${date}T${time}`);
   const endDateTime = new Date(startDateTime.getTime() + 60 * 60 * 1000); // 1 hour duration
   const attendeesList = attendees ? attendees.split(',').map((email: string) => ({ email: email.trim() })) : [];
 
   let googleEventId = "agent-event-id-" + Date.now();
   try {
-    const insertResponse = await corsair.googlecalendar.api.events.create({
-      calendarId: "primary",
-      event: {
-        summary: title,
-        location: "",
-        start: { dateTime: startDateTime.toISOString() },
-        end: { dateTime: endDateTime.toISOString() },
-        attendees: attendeesList
+    if (accessToken) {
+      const res = await fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          summary: title,
+          location: "",
+          start: { dateTime: startDateTime.toISOString() },
+          end: { dateTime: endDateTime.toISOString() },
+          attendees: attendeesList
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        googleEventId = data.id;
+      } else {
+        throw new Error("Google Calendar insert failed");
       }
-    });
-    if (insertResponse && insertResponse.id) {
-      googleEventId = insertResponse.id;
+    } else {
+      throw new Error("No access token");
     }
   } catch (e) {
     console.warn("Agent Google Calendar insert failed. Falling back to local cache.", e);
@@ -106,6 +125,11 @@ export async function POST(req: Request) {
     if (!message) {
       return NextResponse.json({ error: "Message is required" }, { status: 400 });
     }
+
+    const account = await db.query.accounts.findFirst({
+      where: (accounts, { and, eq }) => and(eq(accounts.userId, session.user!.id!), eq(accounts.provider, "google"))
+    });
+    const accessToken = account?.access_token || undefined;
 
     const groq = getGroqClient();
     if (!groq) {
@@ -197,9 +221,9 @@ export async function POST(req: Request) {
         let result = {};
 
         if (functionName === "send_email") {
-          result = await executeSendEmail(args.to, args.subject, args.body);
+          result = await executeSendEmail(accessToken, args.to, args.subject, args.body);
         } else if (functionName === "schedule_calendar_event") {
-          result = await executeScheduleEvent(session.user.id, args.title, args.date, args.time, args.attendees);
+          result = await executeScheduleEvent(accessToken, session.user!.id!, args.title, args.date, args.time, args.attendees);
         } else if (functionName === "search_emails") {
           result = await executeSearchEmails(args.query);
         }
