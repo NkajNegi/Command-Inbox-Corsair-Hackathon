@@ -31,49 +31,53 @@ export async function POST() {
 
     // Fetch details for each message and save to DB
     for (const msg of listResponse.messages) {
-      if (!msg.id) continue;
+      try {
+        if (!msg.id) continue;
 
-      // Check if we already have this email
-      const existing = await db.query.emails.findFirst({
-        where: eq(emails.corsairId, msg.id)
-      });
+        // Check if we already have this email
+        const existing = await db.query.emails.findFirst({
+          where: eq(emails.corsairId, msg.id)
+        });
 
-      if (existing) continue;
+        if (existing) continue;
 
-      // Get full metadata
-      const details = await corsair.gmail.api.messages.get(
-        { 
-          id: msg.id, 
-          format: "metadata", 
-          metadataHeaders: ["Subject", "From", "To"] 
-        },
-        { tenantId: session.user.id }
-      );
+        // Get full metadata
+        const details = await corsair.gmail.api.messages.get(
+          { 
+            id: msg.id, 
+            format: "metadata", 
+            metadataHeaders: ["Subject", "From", "To"] 
+          },
+          { tenantId: session.user.id }
+        );
 
-      const headers = details.payload?.headers || [];
-      const subject = headers.find((h: { name?: string; value?: string | null }) => h.name === "Subject")?.value || "No Subject";
-      const from = headers.find((h: { name?: string; value?: string | null }) => h.name === "From")?.value || "Unknown";
-      const to = headers.find((h: { name?: string; value?: string | null }) => h.name === "To")?.value || session.user.email || "Me";
-      
-      const internalDate = details.internalDate 
-        ? new Date(Number(details.internalDate)) 
-        : new Date();
+        const headers = details.payload?.headers || [];
+        const subject = headers.find((h: { name?: string; value?: string | null }) => h.name === "Subject")?.value || "No Subject";
+        const from = headers.find((h: { name?: string; value?: string | null }) => h.name === "From")?.value || "Unknown";
+        const to = headers.find((h: { name?: string; value?: string | null }) => h.name === "To")?.value || session.user.email || "Me";
+        
+        const internalDate = details.internalDate 
+          ? new Date(Number(details.internalDate)) 
+          : new Date();
 
-      await db.insert(emails).values({
-        corsairId: msg.id,
-        threadId: msg.threadId || msg.id,
-        subject,
-        snippet: details.snippet || "",
-        bodyText: details.snippet || "",
-        fromAddress: from,
-        toAddress: to,
-        date: internalDate,
-        userId: session.user.id,
-        isRead: false,
-        isArchived: false,
-      });
+        await db.insert(emails).values({
+          corsairId: msg.id,
+          threadId: msg.threadId || msg.id,
+          subject,
+          snippet: details.snippet || "",
+          bodyText: details.snippet || "",
+          fromAddress: from,
+          toAddress: to,
+          date: internalDate,
+          userId: session.user.id,
+          isRead: false,
+          isArchived: false,
+        });
 
-      syncedCount++;
+        syncedCount++;
+      } catch (innerError) {
+        console.error(`Failed to process message ${msg.id}:`, innerError);
+      }
     }
 
     return NextResponse.json({ success: true, count: syncedCount });
