@@ -15,6 +15,7 @@ export default function ComposeEventModal() {
   const [time, setTime] = useState("");
   const [id, setId] = useState<string | null>(null);
   const [attendees, setAttendees] = useState("");
+  const [inviteAttendees, setInviteAttendees] = useState(true);
 
   useEffect(() => {
     const handleOpen = (e: Event) => {
@@ -38,7 +39,7 @@ export default function ComposeEventModal() {
       await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, title, date, time, attendees }),
+        body: JSON.stringify({ id, title, date, time, attendees: inviteAttendees ? attendees : "" }),
       });
       // Optionally trigger a page refresh here
       window.location.reload();
@@ -119,15 +120,28 @@ export default function ComposeEventModal() {
             </div>
 
             {/* Attendees */}
-            <div className="flex items-center border-b border-border focus-within:border-accent transition-colors py-2">
-              <Users size={16} className="text-muted mr-3" />
-              <input 
-                type="text" 
-                placeholder="Add guests (comma separated emails)" 
-                className="w-full bg-transparent outline-none text-sm text-foreground placeholder:text-muted/60"
-                value={attendees}
-                onChange={(e) => setAttendees(e.target.value)}
-              />
+            <div className="flex flex-col border-b border-border focus-within:border-accent transition-colors py-2">
+              <div className="flex items-center">
+                <Users size={16} className="text-muted mr-3" />
+                <input 
+                  type="text" 
+                  placeholder="Add guests (comma separated emails)" 
+                  className="w-full bg-transparent outline-none text-sm text-foreground placeholder:text-muted/60"
+                  value={attendees}
+                  onChange={(e) => setAttendees(e.target.value)}
+                />
+              </div>
+              {attendees.length > 0 && (
+                <label className="flex items-center space-x-2 text-[11px] text-muted mt-2 ml-7 cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    checked={inviteAttendees} 
+                    onChange={(e) => setInviteAttendees(e.target.checked)} 
+                    className="rounded border-border bg-transparent text-accent focus:ring-accent/50" 
+                  />
+                  <span>Send invitations to guests</span>
+                </label>
+              )}
             </div>
             
             {/* Location */}
