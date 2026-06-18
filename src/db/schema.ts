@@ -2,7 +2,7 @@ import { pgTable, text, timestamp, boolean, doublePrecision, vector, index } fro
 import { jsonb, integer, primaryKey } from "drizzle-orm/pg-core";
 import type { AdapterAccountType } from "next-auth/adapters";
 
-export const users = pgTable("users", {
+export const users = pgTable("user", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   name: text("name"),
   email: text("email").unique().notNull(),
@@ -12,7 +12,7 @@ export const users = pgTable("users", {
 });
 
 export const accounts = pgTable(
-  "accounts",
+  "account",
   {
     userId: text("userId")
       .notNull()
@@ -35,7 +35,7 @@ export const accounts = pgTable(
   })
 );
 
-export const sessions = pgTable("sessions", {
+export const sessions = pgTable("session", {
   sessionToken: text("sessionToken").primaryKey(),
   userId: text("userId")
     .notNull()
