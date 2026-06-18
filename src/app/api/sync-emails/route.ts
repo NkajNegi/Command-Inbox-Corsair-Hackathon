@@ -12,25 +12,38 @@ export async function POST() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    let listResponse;
-    try {
-      listResponse = await corsair.gmail.api.messages.list(
-        { maxResults: 10 },
-        { tenantId: session.user.id }
-      );
-    } catch (e) {
-      console.warn("Corsair integration not linked yet or failed:", e);
+    // Since this is a Hackathon and Corsair OAuth isn't wired up to a UI link button,
+    // we use the NextAuth Google access token which has the correct mail scopes!
+    const account = await db.query.accounts.findFirst({
+      where: (accounts, { and, eq }) => and(eq(accounts.userId, session.user.id), eq(accounts.provider, "google"))
+    });
+
+    if (!account?.access_token) {
+      console.warn("No Google access token found for user");
       return NextResponse.json({ success: true, count: 0, unlinked: true });
     }
-    
-    if (!listResponse?.messages) {
+
+    const token = account.access_token;
+
+    // Fetch message IDs
+    const listRes = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=10", {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    if (!listRes.ok) {
+      console.error("Gmail API list error:", await listRes.text());
+      return NextResponse.json({ success: true, count: 0, unlinked: true });
+    }
+
+    const listData = await listRes.json();
+    if (!listData.messages) {
       return NextResponse.json({ success: true, count: 0 });
     }
 
     let syncedCount = 0;
 
     // Fetch details for each message and save to DB
-    for (const msg of listResponse.messages) {
+    for (const msg of listData.messages) {
       try {
         if (!msg.id) continue;
 
@@ -41,20 +54,19 @@ export async function POST() {
 
         if (existing) continue;
 
-        // Get full metadata
-        const details = await corsair.gmail.api.messages.get(
-          { 
-            id: msg.id, 
-            format: "metadata", 
-            metadataHeaders: ["Subject", "From", "To"] 
-          },
-          { tenantId: session.user.id }
-        );
+        // Fetch full metadata
+        const detailsRes = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${msg.id}?format=metadata&metadataHeaders=Subject&metadataHeaders=From&metadataHeaders=To`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (!detailsRes.ok) continue;
+
+        const details = await detailsRes.json();
 
         const headers = details.payload?.headers || [];
-        const subject = headers.find((h: { name?: string; value?: string | null }) => h.name === "Subject")?.value || "No Subject";
-        const from = headers.find((h: { name?: string; value?: string | null }) => h.name === "From")?.value || "Unknown";
-        const to = headers.find((h: { name?: string; value?: string | null }) => h.name === "To")?.value || session.user.email || "Me";
+        const subject = headers.find((h: any) => h.name === "Subject")?.value || "No Subject";
+        const from = headers.find((h: any) => h.name === "From")?.value || "Unknown";
+        const to = headers.find((h: any) => h.name === "To")?.value || session.user.email || "Me";
         
         const internalDate = details.internalDate 
           ? new Date(Number(details.internalDate)) 

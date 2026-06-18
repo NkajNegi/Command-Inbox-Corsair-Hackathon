@@ -26,27 +26,41 @@ export async function POST(req: Request) {
 
     console.log(`[Corsair SDK Execution] Inserting event to Google Calendar: ${title} at ${startDateTime.toISOString()}`);
 
-    let insertResponse;
+    const account = await db.query.accounts.findFirst({
+      where: (accounts, { and, eq }) => and(eq(accounts.userId, session.user.id), eq(accounts.provider, "google"))
+    });
+
     let googleEventId = "mock-event-id-" + Date.now();
-    try {
-      insertResponse = await corsair.googlecalendar.api.events.create(
-        {
-          calendarId: "primary",
-          event: {
-            summary: title,
-            location: location || "",
-            start: { dateTime: startDateTime.toISOString() },
-            end: { dateTime: endDateTime.toISOString() },
-            attendees: attendeesList
-          }
+    let insertResponse;
+
+    if (account?.access_token) {
+      const token = account.access_token;
+      
+      const res = await fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
         },
-        { tenantId: session.user.id }
-      );
-      if (insertResponse && insertResponse.id) {
-        googleEventId = insertResponse.id;
+        body: JSON.stringify({
+          summary: title,
+          location: location || "",
+          start: { dateTime: startDateTime.toISOString() },
+          end: { dateTime: endDateTime.toISOString() },
+          attendees: attendeesList
+        })
+      });
+
+      if (res.ok) {
+        insertResponse = await res.json();
+        if (insertResponse && insertResponse.id) {
+          googleEventId = insertResponse.id;
+        }
+      } else {
+        console.warn("Actual Google Calendar insert failed:", await res.text());
       }
-    } catch (e) {
-      console.warn("Actual Google Calendar insert failed (scopes/auth missing). Falling back to local cache.", e);
+    } else {
+      console.warn("No Google access token found for user, falling back to local DB cache");
     }
 
     // Insert in local DB

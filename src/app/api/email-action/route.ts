@@ -17,6 +17,27 @@ export async function POST(req: Request) {
     }
 
     if (action === "archive") {
+      const emailRecord = await db.query.emails.findFirst({
+        where: and(eq(emails.id, id), eq(emails.userId, session.user.id))
+      });
+
+      if (emailRecord?.corsairId) {
+        const account = await db.query.accounts.findFirst({
+          where: (accounts, { and, eq }) => and(eq(accounts.userId, session.user.id), eq(accounts.provider, "google"))
+        });
+
+        if (account?.access_token) {
+          await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${emailRecord.corsairId}/modify`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${account.access_token}`,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ removeLabelIds: ["INBOX"] })
+          });
+        }
+      }
+
       await db
         .update(emails)
         .set({ isArchived: true })
@@ -27,6 +48,25 @@ export async function POST(req: Request) {
     } 
     
     if (action === "delete") {
+      const emailRecord = await db.query.emails.findFirst({
+        where: and(eq(emails.id, id), eq(emails.userId, session.user.id))
+      });
+
+      if (emailRecord?.corsairId) {
+        const account = await db.query.accounts.findFirst({
+          where: (accounts, { and, eq }) => and(eq(accounts.userId, session.user.id), eq(accounts.provider, "google"))
+        });
+
+        if (account?.access_token) {
+          await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${emailRecord.corsairId}/trash`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${account.access_token}`
+            }
+          });
+        }
+      }
+
       await db
         .delete(emails)
         .where(and(eq(emails.id, id), eq(emails.userId, session.user.id)));
