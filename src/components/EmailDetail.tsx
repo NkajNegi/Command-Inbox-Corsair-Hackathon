@@ -2,7 +2,7 @@
 
 import { format } from "date-fns";
 import type { Email } from "./EmailList";
-import { MoreHorizontal, Archive, Trash2, CalendarPlus, ChevronLeft, Shield } from "lucide-react";
+import { MoreHorizontal, Archive, Trash2, CalendarPlus, ChevronLeft, Shield, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -17,6 +17,40 @@ export default function EmailDetail({ email, onBack, onActionComplete }: EmailDe
   const [replyText, setReplyText] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [isMutating, setIsMutating] = useState(false);
+  const [isParsingEvent, setIsParsingEvent] = useState(false);
+
+  const handleParseEvent = async () => {
+    if (!email || isParsingEvent) return;
+    setIsParsingEvent(true);
+    try {
+      const res = await fetch("/api/parse-event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subject: email.subject, snippet: email.snippet })
+      });
+      const data = await res.json();
+      if (data.success) {
+        window.dispatchEvent(new CustomEvent("open-compose-event", { 
+          detail: { 
+            title: data.title, 
+            date: data.date, 
+            time: data.time, 
+            attendees: data.attendees 
+          } 
+        }));
+      } else {
+        throw new Error("AI parsing failed");
+      }
+    } catch (e) {
+      console.error(e);
+      // Fallback
+      window.dispatchEvent(new CustomEvent("open-compose-event", { 
+        detail: { title: email.subject, description: email.snippet } 
+      }));
+    } finally {
+      setIsParsingEvent(false);
+    }
+  };
 
   const handleAction = async (action: "archive" | "delete") => {
     if (!email || isMutating) return;
@@ -96,15 +130,16 @@ export default function EmailDetail({ email, onBack, onActionComplete }: EmailDe
           {/* Action buttons */}
           <div className="flex items-center gap-1.5">
             <button 
-              onClick={() => {
-                window.dispatchEvent(new CustomEvent("open-compose-event", { 
-                  detail: { title: email.subject, description: email.snippet } 
-                }));
-              }}
-              className="p-2 text-amber-450 hover:text-amber-300 hover:bg-amber-500/10 border border-transparent hover:border-amber-900/20 rounded transition-all cursor-pointer" 
-              title="Add to Calendar"
+              onClick={handleParseEvent}
+              className="p-2 text-amber-450 hover:text-amber-300 hover:bg-amber-500/10 border border-transparent hover:border-amber-900/20 rounded transition-all cursor-pointer relative" 
+              title="Add to Calendar (AI Auto-Fill)"
+              disabled={isParsingEvent}
             >
-              <CalendarPlus size={15} />
+              {isParsingEvent ? (
+                <Loader2 size={15} className="animate-spin text-amber-300" />
+              ) : (
+                <CalendarPlus size={15} />
+              )}
             </button>
             <button 
               onClick={() => handleAction("archive")}
