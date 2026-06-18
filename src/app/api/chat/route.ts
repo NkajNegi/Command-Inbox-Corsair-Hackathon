@@ -60,7 +60,7 @@ async function executeSendEmail(accessToken: string | undefined, to: string, sub
   }
 }
 
-async function executeScheduleEvent(accessToken: string | undefined, userId: string, title: string, date: string, time: string, attendees: string) {
+async function executeScheduleEvent(accessToken: string | undefined, userId: string, title: string, date: string, time: string, attendees: string, priority: string = "medium") {
   const startDateTime = new Date(`${date}T${time}`);
   const endDateTime = new Date(startDateTime.getTime() + 60 * 60 * 1000); // 1 hour duration
   const attendeesList = attendees ? attendees.split(',').map((email: string) => ({ email: email.trim() })) : [];
@@ -95,6 +95,10 @@ async function executeScheduleEvent(accessToken: string | undefined, userId: str
     console.warn("Agent Google Calendar insert failed. Falling back to local cache.", e);
   }
 
+  let priorityScore = 0.5;
+  if (priority.toLowerCase() === "high") priorityScore = 1.0;
+  if (priority.toLowerCase() === "low") priorityScore = 0.1;
+
   // Insert in local DB
   await db.insert(events).values({
     corsairId: googleEventId,
@@ -103,10 +107,11 @@ async function executeScheduleEvent(accessToken: string | undefined, userId: str
     startTime: startDateTime,
     endTime: endDateTime,
     attendeesRaw: attendees || "",
+    priorityScore: priorityScore,
     userId: userId,
   });
 
-  return { success: true, message: "Calendar event scheduled and cached locally" };
+  return { success: true, message: `Calendar event scheduled and cached locally with ${priority} priority` };
 }
 
 async function executeSearchEmails(query: string) {
@@ -185,7 +190,8 @@ export async function POST(req: Request) {
               title: { type: "string", description: "Title/Summary of the event" },
               date: { type: "string", description: "Date of the event in YYYY-MM-DD format" },
               time: { type: "string", description: "Time of the event in HH:MM format" },
-              attendees: { type: "string", description: "Comma-separated email list of invitees" }
+              attendees: { type: "string", description: "Comma-separated email list of invitees" },
+              priority: { type: "string", description: "Priority of the event: 'high' (e.g. business meetings), 'medium', or 'low' (e.g. package deliveries)" }
             },
             required: ["title", "date", "time"]
           }
@@ -223,7 +229,7 @@ export async function POST(req: Request) {
     const messages: ChatMessage[] = [
       { 
         role: "system", 
-        content: "You are the Decrypt AI Agent for Command Inbox. You can search emails, send emails, schedule events, and check recent emails. When a user asks you to check their inbox and find schedules/meetings, call get_recent_emails first. Then, carefully parse the returned messages. If you find any events, dates, or times, automatically call schedule_calendar_event for each one to log them into the system. Be brief, professional, and report what actions you have completed." 
+        content: "You are the Decrypt AI Agent for Command Inbox. You can search emails, send emails, schedule events, and check recent emails. When a user asks you to check their inbox and find schedules/meetings, call get_recent_emails first. Then, carefully parse the returned messages. If you find any events, dates, or times, automatically call schedule_calendar_event for each one. Very importantly: determine the priority ('high', 'medium', 'low') based on the email content (e.g., a business meeting is 'high' priority, a friend plan is 'medium', a package courier email is 'low'). Pass this priority to the schedule_calendar_event tool. Be brief, professional, and report what actions you have completed." 
       },
       { role: "user", content: message }
     ];
@@ -253,7 +259,7 @@ export async function POST(req: Request) {
         if (functionName === "send_email") {
           result = await executeSendEmail(accessToken, args.to, args.subject, args.body);
         } else if (functionName === "schedule_calendar_event") {
-          result = await executeScheduleEvent(accessToken, session.user!.id!, args.title, args.date, args.time, args.attendees);
+          result = await executeScheduleEvent(accessToken, session.user!.id!, args.title, args.date, args.time, args.attendees, args.priority || "medium");
         } else if (functionName === "search_emails") {
           result = await executeSearchEmails(args.query);
         } else if (functionName === "get_recent_emails") {

@@ -11,6 +11,7 @@ export type CalendarEvent = {
   end: Date;
   location: string;
   attendees: string[];
+  priorityScore?: number;
 };
 
 interface EventListProps {
@@ -20,8 +21,9 @@ interface EventListProps {
   isSyncing?: boolean;
 }
 
-export default function EventList({ events, onCreateEvent }: EventListProps) {
+export default function EventList({ events, onCreateEvent, onSync }: EventListProps) {
   const [viewMode, setViewMode] = useState<"timeline" | "month">("timeline");
+  const [isCanceling, setIsCanceling] = useState<string | null>(null);
 
   const handleEditEvent = (event: CalendarEvent) => {
     window.dispatchEvent(new CustomEvent("open-compose-event", {
@@ -33,6 +35,27 @@ export default function EventList({ events, onCreateEvent }: EventListProps) {
         attendees: event.attendees.join(", ")
       }
     }));
+  };
+  const handleCancelEvent = async (e: React.MouseEvent, event: CalendarEvent) => {
+    e.stopPropagation();
+    const sendEmail = window.confirm("Do you want to send a cancellation email to all attendees?");
+    setIsCanceling(event.id);
+    
+    try {
+      const res = await fetch("/api/cancel-event", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ eventId: event.id, sendCancellationEmail: sendEmail })
+      });
+      if (res.ok) {
+        if (onSync) onSync();
+      } else {
+        console.error("Failed to cancel event");
+      }
+    } catch (err) {
+      console.error(err);
+    }
+    setIsCanceling(null);
   };
 
   // Monthly Calendar Math
@@ -98,14 +121,19 @@ export default function EventList({ events, onCreateEvent }: EventListProps) {
                 >
                   <div className="flex items-center gap-5">
                     {/* Date Block */}
-                    <div className="flex flex-col items-center justify-center w-12 h-12 bg-zinc-905 border border-[#232029] rounded group-hover:border-amber-500/40 transition-colors">
-                      <span className="text-[9px] font-bold text-amber-500 font-mono uppercase tracking-widest">{format(event.start, "MMM")}</span>
+                    <div className={`flex flex-col items-center justify-center w-12 h-12 bg-zinc-905 border rounded transition-colors ${event.priorityScore && event.priorityScore >= 0.8 ? 'border-amber-500/80 shadow-[0_0_10px_rgba(245,158,11,0.2)]' : 'border-[#232029] group-hover:border-amber-500/40'}`}>
+                      <span className={`text-[9px] font-bold font-mono uppercase tracking-widest ${event.priorityScore && event.priorityScore >= 0.8 ? 'text-amber-400' : 'text-amber-500'}`}>{format(event.start, "MMM")}</span>
                       <span className="text-sm font-bold text-zinc-250 font-mono leading-none mt-0.5">{format(event.start, "d")}</span>
                     </div>
                     
                     {/* Event Details */}
                     <div>
-                      <h3 className="font-semibold text-zinc-300 text-xs mb-1 font-mono tracking-tight">{event.title}</h3>
+                      <div className="flex items-center gap-2 mb-1">
+                        {event.priorityScore && event.priorityScore >= 0.8 && (
+                          <span className="bg-red-500/20 text-red-400 border border-red-500/30 px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider animate-pulse">High Priority</span>
+                        )}
+                        <h3 className="font-semibold text-zinc-300 text-xs font-mono tracking-tight">{event.title}</h3>
+                      </div>
                       <div className="text-[10px] text-zinc-550 flex items-center gap-2 font-mono">
                         <span>{format(event.start, "h:mm a")} - {format(event.end, "h:mm a")}</span>
                         <span>•</span>
@@ -127,13 +155,27 @@ export default function EventList({ events, onCreateEvent }: EventListProps) {
                          </div>
                        ))}
                     </div>
-                    <button 
-                      onClick={() => handleEditEvent(event)}
-                      className="p-1.5 text-zinc-500 hover:text-zinc-200 border border-transparent hover:border-[#232029] hover:bg-[#18161f] rounded opacity-0 group-hover:opacity-100 transition-all duration-150 cursor-pointer"
-                      title="Edit Event"
-                    >
-                      <Edit2 size={13} />
-                    </button>
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all duration-150">
+                      <button 
+                        onClick={() => handleEditEvent(event)}
+                        className="p-1.5 text-zinc-500 hover:text-zinc-200 border border-transparent hover:border-[#232029] hover:bg-[#18161f] rounded cursor-pointer"
+                        title="Edit Event"
+                      >
+                        <Edit2 size={13} />
+                      </button>
+                      <button 
+                        onClick={(e) => handleCancelEvent(e, event)}
+                        disabled={isCanceling === event.id}
+                        className="p-1.5 text-zinc-500 hover:text-red-400 border border-transparent hover:border-red-900/30 hover:bg-red-950/20 rounded cursor-pointer disabled:opacity-50"
+                        title="Cancel Event"
+                      >
+                        {isCanceling === event.id ? (
+                          <div className="w-[13px] h-[13px] border-2 border-red-500/30 border-t-red-500 rounded-full animate-spin" />
+                        ) : (
+                          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}

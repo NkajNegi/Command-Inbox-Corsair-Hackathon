@@ -2,7 +2,7 @@ import CalendarClient from "@/components/CalendarClient";
 import { type CalendarEvent } from "@/components/EventList";
 import { db } from "@/db";
 import { events } from "@/db/schema";
-import { asc, gte } from "drizzle-orm";
+import { asc, desc, gte } from "drizzle-orm";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 
@@ -16,7 +16,7 @@ export default async function CalendarPage() {
 
   let dbEvents: (typeof events.$inferSelect)[] = [];
   try {
-    dbEvents = await db.select().from(events).where(gte(events.endTime, new Date())).orderBy(asc(events.startTime)).limit(50);
+    dbEvents = await db.select().from(events).where(gte(events.endTime, new Date())).orderBy(desc(events.priorityScore), asc(events.startTime)).limit(50);
   } catch (error) {
     console.error("Database connection failed.", error);
   }
@@ -27,7 +27,8 @@ export default async function CalendarPage() {
     start: e.startTime,
     end: e.endTime,
     location: e.location || "TBD",
-    attendees: e.attendeesRaw ? e.attendeesRaw.split(",") : []
+    attendees: e.attendeesRaw ? e.attendeesRaw.split(",") : [],
+    priorityScore: e.priorityScore || 0.5
   }));
 
   if (mappedEvents.length === 0) {
@@ -38,7 +39,8 @@ export default async function CalendarPage() {
         start: new Date("2026-06-17T10:00:00Z"),
         end: new Date("2026-06-17T11:00:00Z"),
         location: "Your App",
-        attendees: ["system@corsair.dev"]
+        attendees: ["system@corsair.dev"],
+        priorityScore: 0.5
       }
     ];
   }

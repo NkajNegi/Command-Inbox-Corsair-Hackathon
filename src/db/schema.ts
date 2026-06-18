@@ -90,6 +90,7 @@ export const events = pgTable("events", {
   // Drizzle pg-core doesn't support string array perfectly in all adapters without specific types, 
   // but jsonb or text array works. We'll use a simple comma-separated string for simplicity in edge.
   attendeesRaw: text("attendees_raw"), // comma-separated string
+  priorityScore: doublePrecision("priority_score").default(0),
   userId: text("user_id").references(() => users.id).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
