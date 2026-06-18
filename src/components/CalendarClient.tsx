@@ -29,7 +29,7 @@ export default function CalendarClient({
   };
 
   return (
-    <div className="flex flex-col h-full w-full bg-[#0b0a0d] text-[#f4ebd0] overflow-hidden relative font-mono cyber-grid-overlay animate-crt">
+    <div className="flex flex-col h-full w-full bg-[#0b0a0d] text-[#f4ebd0] overflow-hidden relative font-mono cyber-grid-overlay">
       {/* Top Console Navigation Bar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between px-6 py-4 border-b border-[#232029] bg-[#121116]/95 backdrop-blur-md relative z-10 gap-4">
         

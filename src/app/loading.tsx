@@ -2,7 +2,7 @@ import { Activity } from "lucide-react";
 
 export default function Loading() {
   return (
-    <div className="flex flex-col items-center justify-center h-full w-full bg-[#0b0a0d] text-amber-500 font-mono animate-crt relative overflow-hidden">
+    <div className="flex flex-col items-center justify-center h-full w-full bg-[#0b0a0d] text-amber-500 font-mono relative overflow-hidden">
       <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-amber-500/40 m-8" />
       <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-amber-500/40 m-8" />
       
