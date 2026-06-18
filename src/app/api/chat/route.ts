@@ -177,7 +177,7 @@ export async function POST(req: Request) {
     ];
 
     const completion = await groq.chat.completions.create({
-      model: "llama3-70b-8192",
+      model: "llama-3.3-70b-versatile",
       messages: messages as unknown as Parameters<typeof groq.chat.completions.create>[0]["messages"],
       tools: tools as unknown as Parameters<typeof groq.chat.completions.create>[0]["tools"],
     });
@@ -214,7 +214,7 @@ export async function POST(req: Request) {
 
       // Get final completion from LLM after tool calls
       const finalCompletion = await groq.chat.completions.create({
-        model: "llama3-70b-8192",
+        model: "llama-3.3-70b-versatile",
         messages: messages as unknown as Parameters<typeof groq.chat.completions.create>[0]["messages"],
       });
 
