@@ -3,8 +3,9 @@ import { Groq } from "groq-sdk";
 import { searchSimilarEmails } from "@/lib/vector-search";
 import { corsair } from "@/corsair";
 import { db } from "@/db";
-import { events } from "@/db/schema";
+import { events, emails } from "@/db/schema";
 import { auth } from "@/auth";
+import { desc } from "drizzle-orm";
 
 interface ChatMessage {
   role: "system" | "user" | "assistant" | "tool";
@@ -113,6 +114,20 @@ async function executeSearchEmails(query: string) {
   return { success: true, results: results.map(r => ({ subject: r.subject, snippet: r.snippet, from: r.fromAddress })) };
 }
 
+async function executeGetRecentEmails(limit: number = 10) {
+  try {
+    const recent = await db
+      .select({ subject: emails.subject, snippet: emails.snippet, fromAddress: emails.fromAddress, date: emails.date })
+      .from(emails)
+      .orderBy(desc(emails.date))
+      .limit(limit);
+    return { success: true, results: recent };
+  } catch (error) {
+    console.error("Failed to fetch recent emails:", error);
+    return { success: false, error: "Database error" };
+  }
+}
+
 export async function POST(req: Request) {
   try {
     const session = await auth();
@@ -189,13 +204,26 @@ export async function POST(req: Request) {
             required: ["query"]
           }
         }
+      },
+      {
+        type: "function",
+        function: {
+          name: "get_recent_emails",
+          description: "Retrieve the user's most recent emails chronologically.",
+          parameters: {
+            type: "object",
+            properties: {
+              limit: { type: "number", description: "Number of recent emails to retrieve (default 10, max 25)" }
+            }
+          }
+        }
       }
     ];
 
     const messages: ChatMessage[] = [
       { 
         role: "system", 
-        content: "You are the Decrypt AI Agent for Command Inbox. You can search emails, send emails, and schedule events. Be brief, professional, and report what actions you have completed." 
+        content: "You are the Decrypt AI Agent for Command Inbox. You can search emails, send emails, schedule events, and check recent emails. When a user asks you to check their inbox and find schedules/meetings, call get_recent_emails first. Then, carefully parse the returned messages. If you find any events, dates, or times, automatically call schedule_calendar_event for each one to log them into the system. Be brief, professional, and report what actions you have completed." 
       },
       { role: "user", content: message }
     ];
@@ -228,6 +256,8 @@ export async function POST(req: Request) {
           result = await executeScheduleEvent(accessToken, session.user!.id!, args.title, args.date, args.time, args.attendees);
         } else if (functionName === "search_emails") {
           result = await executeSearchEmails(args.query);
+        } else if (functionName === "get_recent_emails") {
+          result = await executeGetRecentEmails(args.limit || 10);
         }
 
         messages.push({
