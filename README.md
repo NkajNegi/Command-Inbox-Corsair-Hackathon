@@ -1,72 +1,70 @@
-# Command Inbox - Corsair Hackathon Submission
+# Command Inbox: Cybernetic Workflow Edition ⚡
 
-A highly optimized, Superhuman-style email and calendar management application built with Next.js, Postgres, and Corsair for the ChaiCode MacBook Giveaway Hackathon.
+## Overview
+When you use Gmail or Google Calendar, a regular workflow usually takes a few more clicks than it should. Sending a calendar invite or managing your daily triage often involves tedious UI steps that slow down power users. 
 
-## Builder Mode On | MacBook Giveaway Hackathon
-Built for the ChaiCode community. 
-*Tags:* #chaicode #corsair-dev
+**Command Inbox** is a Superhuman-style email and calendar management application built entirely to fix this. It leverages native Google APIs to completely bypass the traditional Gmail/Calendar interfaces, giving you a lightning-fast, keyboard-driven, and highly intuitive workspace designed exactly how a power user needs it.
 
----
+Built for the **MacBook Giveaway Hackathon**, this project empowers users to search, draft, send, receive emails, and schedule events seamlessly without the lag of traditional clients.
 
-## 🚀 Phased Project Architecture
+## 🛠 Tech Stack
+- **Framework**: Next.js 16 (App Router)
+- **Database**: PostgreSQL (Neon) with `pgvector` for local embedding searches
+- **ORM**: Drizzle ORM
+- **Authentication**: NextAuth.js (Google Provider)
+- **Styling**: TailwindCSS & Framer Motion
+- **AI Models**: Groq API (Llama-3-70b / Mixtral-8x7b)
 
-### Phase 1: Tech Stack (Optimal, Cheapest & Reliable Path)
-The foundational layer carefully selected to ensure maximum developer velocity, zero upfront infrastructure costs, and serverless scalability.
-- **Frontend & Edge Hosting:** Next.js 14/15 (App Router) deployed on **Vercel**. Provides global edge caching and auto-scaling entirely on the free tier.
-- **Database & Vector Storage:** **Neon Serverless Postgres** (or Supabase). Gives us a generous free tier, scale-to-zero compute to save costs, and built-in `pgvector` so we don't need a separate expensive vector database.
-- **ORM:** **Drizzle ORM** (or Prisma). Extremely lightweight, ensuring fast cold-start times on serverless functions without the memory overhead.
-- **Integration Layer:** **Corsair SDK**. Handles all Google OAuth, token refreshing, and webhooks as a managed service, completely removing the need for us to host and pay for our own Redis queues or polling workers.
-- **AI/LLM:** **Groq (Llama-3)** for lightning-fast, nearly free inference on agent chat, or **OpenAI GPT-4o-mini** for highly reliable, rock-bottom-priced text embeddings and priority filtering.
+## 🚀 Features & Workflow Improvements
 
-### Phase 2: System Design (Optimal, Cheapest & Reliable Path)
-The data flow and backend orchestration are engineered to prevent timeouts and minimize compute duration.
-- **Zero-Latency Webhooks (`/api/corsair/webhook`):** Using Next.js 15's `unstable_after()` (or `waitUntil`), we immediately acknowledge Corsair webhooks with a 200 OK. This guarantees Corsair never receives a timeout error and eliminates the need for expensive external queues like Redis or SQS.
-- **Asynchronous AI Pipeline:** Once the webhook is acknowledged, the serverless function spins off the Groq priority scoring and pgvector embedding generation strictly in the background. 
-- **Local Caching & Edge Fetching:** Next.js Data Cache is utilized to serve the inbox UI instantly. We bypass slow third-party API limits by querying our local vector-synced Postgres DB directly.
-- **Agentic Chat (`/api/chat`):** A Corsair MCP endpoint interprets natural language commands from the user and dispatches them directly via Corsair's SDK, acting as a lightweight proxy without needing heavy LangChain setups.
+### 1. Lightning-Fast Local Search (Bonus Completed)
+We added a vector database (`pgvector`) to the existing Postgres database. Emails are cached and embedded locally, allowing you to perform semantic, lightning-fast searches across your entire email history in under 1 second without hitting the Gmail API.
 
-### Phase 3: User Interface (UI) Architecture (Optimal, Cheapest & Reliable Path)
-Focusing on the "Superhuman-style" workflows using zero-cost, battle-tested modern tools.
-- **React Server Components (RSC):** The core inbox (`EmailList`, `EmailDetail`) is architected as Server Components. This sends exactly 0kb of JavaScript to the client for the main UI, minimizing your bandwidth costs (cheapest) and guaranteeing instant time-to-interactive (optimal).
-- **Headless UI Primitives (shadcn style):** We rely on open-source, unstyled Radix-like accessible components. This guarantees 100% reliability for screen readers and keyboard navigation without paying for heavy proprietary UI libraries.
-- **Tailwind CSS Utility Engine:** Compiles down to a microscopic CSS file. Reliable across all browsers with absolute zero runtime styling overhead.
-- **Dynamic Client Boundaries:** Heavy interactive pieces like the `framer-motion` `CommandPalette` are isolated in `"use client"` boundaries and lazy-loaded via `next/dynamic`. They never block the server's critical rendering path.
+### 2. Autonomous Agent Chat (Bonus Completed)
+We integrated a dynamic AI Agent directly into the interface. You can chat with the agent to execute complex workflows automatically:
+- *"Check my inbox for messages and add schedules to the schedule log."*
+- *"Send a calendar invite to friend@corsair.dev at 9 AM next Thursday. Send him an email too saying I look forward to our meeting."*
+The agent natively parses your recent emails, extracts dates/times, and invokes tools to schedule events and send emails on your behalf.
 
-### Phase 4: Performance & Optimization (Optimal, Cheapest & Reliable Path)
-Ensuring the application feels instantaneous while keeping operational costs at absolute zero.
-- **React 19 `useOptimistic` UI:** We simulate instant sends and archives on the frontend immediately. This hides all network latency from the user (optimal performance) and guarantees the UI never locks up (highly reliable UX).
-- **Vercel Edge Data Caching:** We heavily utilize Next.js Route Caching and Data Fetch caching. Subsequent page loads require zero database calls, meaning we don't rack up expensive database read operations (cheapest).
-- **Native `pgvector` HNSW Indexing:** Rather than paying hundreds of dollars a month for a dedicated managed vector database, we use Postgres-native HNSW indices. This guarantees sub-millisecond semantic search retrieval that scales reliably.
+### 3. Automatic AI Priority Filtering (Bonus Completed)
+All synced emails are automatically passed through a lightning-fast Groq LLM to determine their priority level based on the subject and body. High-priority emails are instantly highlighted in the UI so you never miss critical messages.
 
----
+### 4. Keyboard Driven Actions (Bonus Completed)
+The entire application is wired with keystrokes (e.g., `Cmd + Enter` to send emails), allowing users to perform common actions instantly without clicking around.
 
-## 🎯 Hackathon Deliverables
+### 5. Intuitive Calendar Grid
+The calendar isn't just a vertical list; it includes a dynamic Monthly Grid View that visually slots your Google Calendar events perfectly into a cohesive, highly scannable timeline, while filtering out expired past events.
 
-### Corsair Features Used
-- **Gmail Integration:** Core reading/sending workflows via Corsair unified APIs.
-- **Google Calendar Integration:** Creating events and fetching schedules.
-- **Realtime Webhooks:** Bypassing standard API polling.
-- **Corsair Search API:** Integrated into the Advanced Search UI.
-- **Corsair MCP:** Integrated for the AI Agent Chat assistant.
+## 📦 Setup & Installation
 
-### Bonus Tasks Attempted & Completed
-- ✅ **Corsair MCP agent chat** - (Ask the agent to schedule meetings for you via natural language)
-- ✅ **Realtime webhooks** - (Receive events instantly)
-- ✅ **Keyboard shortcuts & Command Palette** - (`Ctrl+K` for commands, `⇧⌘F` for search)
-- ✅ **Automatic LLM Priority Filtering** - (Scores incoming webhooks for importance)
-- ✅ **Fast Local Vector Search** - (Cached emails in Postgres `pgvector` for instant retrieval)
-
----
-
-## 🛠 Getting Started
-
-1. Clone the repository.
-2. Run `npm install`.
-3. Set your environment variables in `.env`:
-   ```env
-   DATABASE_URL="postgres://user:pass@host/db"
-   CORSAIR_API_KEY="your-corsair-key"
-   OPENAI_API_KEY="your-openai-key"
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/NkajNegi/Command-Inbox-Corsair-Hackathon.git
+   cd Command-Inbox-Corsair-Hackathon
    ```
-4. Run `npx drizzle-kit push` to initialize your database schema.
-5. Run `npm run dev` to start the local development server.
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Set up environment variables (`.env`):
+   ```env
+   DATABASE_URL="postgres://..."
+   AUTH_SECRET="..."
+   GOOGLE_CLIENT_ID="..."
+   GOOGLE_CLIENT_SECRET="..."
+   GROQ_API_KEY="..."
+   OPENAI_API_KEY="..."
+   ```
+4. Run the development server:
+   ```bash
+   npm run dev
+   ```
+
+## 🎥 Submission Details
+- **GitHub Repo**: [Link to Repo](https://github.com/NkajNegi/Command-Inbox-Corsair-Hackathon)
+- **Live Demo**: [Insert Vercel Link Here]
+- **Demo Video**: [Insert Video Link Here]
+- **Social Posts**: [LinkedIn] / [X/Twitter]
+
+*Builder Mode On | MacBook Giveaway Hackathon*
+*#chaicode #corsair-dev*
