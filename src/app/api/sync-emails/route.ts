@@ -4,6 +4,8 @@ import { db } from "@/db";
 import { emails } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
+export const dynamic = "force-dynamic";
+
 export async function POST() {
   try {
     const session = await auth();
@@ -27,7 +29,8 @@ export async function POST() {
     // Fetch message IDs (excluding spam, trash, promotions, and social tabs)
     const searchQuery = encodeURIComponent("-label:SPAM -label:TRASH -category:promotions -category:social");
     const listRes = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=50&q=${searchQuery}`, {
-      headers: { Authorization: `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store"
     });
 
     if (!listRes.ok) {
@@ -56,7 +59,8 @@ export async function POST() {
 
         // Fetch full metadata
         const detailsRes = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${msg.id}?format=metadata&metadataHeaders=Subject&metadataHeaders=From&metadataHeaders=To`, {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
+          cache: "no-store"
         });
 
         if (!detailsRes.ok) continue;
