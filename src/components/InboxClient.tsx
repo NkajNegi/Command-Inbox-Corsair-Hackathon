@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import EmailList, { type Email } from "@/components/EmailList";
 import EmailDetail from "@/components/EmailDetail";
 import { RefreshCw, Terminal, Activity, Plus } from "lucide-react";
@@ -14,6 +14,44 @@ export default function InboxClient({ initialEmails, session }: { initialEmails:
   const [hiddenEmailIds, setHiddenEmailIds] = useState<Set<string>>(new Set());
   const [isSyncing, setIsSyncing] = useState(false);
   const router = useRouter();
+
+  const [sidebarWidth, setSidebarWidth] = useState(380);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  }, []);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging) return;
+      // Clamp width between 300px and 600px
+      const newWidth = Math.max(300, Math.min(600, e.clientX));
+      setSidebarWidth(newWidth);
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    if (isDragging) {
+      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("mouseup", handleMouseUp);
+      document.body.style.userSelect = "none";
+      document.body.style.cursor = "col-resize";
+    } else {
+      document.body.style.userSelect = "";
+      document.body.style.cursor = "";
+    }
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+      document.body.style.userSelect = "";
+      document.body.style.cursor = "";
+    };
+  }, [isDragging]);
 
   const displayEmails = initialEmails.filter(e => !hiddenEmailIds.has(e.id));
   const selectedEmail = displayEmails.find(e => e.id === selectedId) || null;
@@ -121,13 +159,22 @@ export default function InboxClient({ initialEmails, session }: { initialEmails:
       {/* Main Console Workspace */}
       <div className="flex flex-1 overflow-hidden relative">
         {/* Left Column Pane (Email List Queue) */}
-        <div className={`w-full md:w-[380px] shrink-0 border-r border-[#232029] h-full bg-[#0b0a0d]/40 ${selectedId ? 'hidden md:flex flex-col' : 'flex flex-col'}`}>
+        <div 
+          style={{ "--sidebar-width": `${sidebarWidth}px` } as React.CSSProperties}
+          className={`w-full md:w-[var(--sidebar-width)] shrink-0 h-full bg-[#0b0a0d]/40 ${selectedId ? 'hidden md:flex flex-col' : 'flex flex-col'}`}
+        >
           <EmailList 
             emails={displayEmails} 
             selectedId={selectedId} 
             onSelect={setSelectedId} 
           />
         </div>
+        
+        {/* Resizer Handle */}
+        <div 
+          onMouseDown={handleMouseDown}
+          className="hidden md:block w-1 cursor-col-resize bg-[#232029] hover:bg-amber-500/80 active:bg-amber-500 transition-colors z-20 shrink-0"
+        />
         
         {/* Right Column Pane (Detail Decryption View) */}
         <div className={`flex-1 h-full bg-[#0b0a0d]/25 relative ${selectedId ? 'flex flex-col' : 'hidden md:flex flex-col'}`}>
