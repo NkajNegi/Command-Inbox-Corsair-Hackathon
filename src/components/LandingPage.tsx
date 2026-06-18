@@ -279,7 +279,7 @@ export default function LandingPage() {
             <Command className="w-4 h-4 text-[#f59e0b]" />
           </div>
           <span className="text-xs uppercase tracking-widest text-[#f59e0b] font-bold">
-            FLIGHT_COMMAND // MODULE_TRG
+            COMMAND_INBOX // SUPERHUMAN_WORKFLOW
           </span>
         </div>
         
@@ -294,7 +294,7 @@ export default function LandingPage() {
             onClick={() => signIn("google")}
             className="text-[10px] uppercase tracking-wider bg-amber-500 hover:bg-amber-400 text-zinc-950 px-4 py-2.5 rounded transition-all duration-200 shadow-md shadow-amber-500/10 font-bold cursor-pointer border border-amber-400/20"
           >
-            INITIALIZE BOOT
+            INITIALIZE WORKSPACE
           </button>
         </div>
       </nav>
@@ -310,7 +310,7 @@ export default function LandingPage() {
           {/* Status Badge */}
           <motion.div variants={itemVariants} className="inline-flex items-center gap-2 px-3.5 py-1 rounded bg-zinc-950 border border-amber-500/20 text-xs text-amber-400/95 mb-8 backdrop-blur-sm shadow-inner tracking-wider">
             <Activity className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
-            <span>LINK_ESTABLISHED // APOLLO_D_NET</span>
+            <span>LINK_ESTABLISHED // CORSAIR_WEBHOOKS</span>
           </motion.div>
           
           {/* Main Title with benefit-driven focus */}
@@ -335,7 +335,7 @@ export default function LandingPage() {
           
           {/* Benefit-driven Description */}
           <motion.p variants={itemVariants} className="text-xs md:text-sm text-zinc-550 mb-10 max-w-2xl mx-auto leading-relaxed uppercase tracking-wider">
-            RECLAIM 4 HOURS EVERY WEEK. TRIAGE GMAIL CORRESPONDENCE 4x FASTER. COMMAND INBOX MERGES YOUR MESSAGE LOGS AND CALENDAR TIMELINE INTO A PHOSPHOR-AMBER CRT FLIGHT MODULE.
+            RECLAIM 4 HOURS EVERY WEEK. TRIAGE GMAIL 4x FASTER. COMMAND INBOX MERGES YOUR EMAIL LOGS AND CALENDAR TIMELINE INTO A BLAZING FAST, KEYBOARD-DRIVEN WORKSPACE POWERED BY CORSAIR.
           </motion.p>
 
           {/* Interactive Keyboard Summon Reminder */}
@@ -360,7 +360,7 @@ export default function LandingPage() {
                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
               </svg>
-              <span>CONNECT_TELEMETRY_LINK</span>
+              <span>CONNECT_GMAIL_WORKSPACE</span>
               <ArrowRight className="w-3.5 h-3.5 text-zinc-650 group-hover:text-amber-450 group-hover:translate-x-1 transition-all" />
             </button>
             
@@ -645,8 +645,8 @@ export default function LandingPage() {
         {/* Competitor-Inspired Split Inbox Showcase */}
         <section className="w-full mt-32 space-y-12">
           <div className="text-center space-y-2">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-amber-500">{"// flight_computer_subsystems"}</h2>
-            <p className="text-xl font-bold text-zinc-150 uppercase tracking-tight">Full Control Module Suite</p>
+            <h2 className="text-xs font-bold uppercase tracking-widest text-amber-500">{"// superhuman_workflows"}</h2>
+            <p className="text-xl font-bold text-zinc-150 uppercase tracking-tight">Hackathon Feature Suite</p>
           </div>
 
           {/* Interactive Showcase Tabs */}
@@ -655,19 +655,19 @@ export default function LandingPage() {
               onClick={() => setActiveTab("inbox")}
               className={`py-2 rounded font-mono uppercase tracking-wider transition-all cursor-pointer ${activeTab === "inbox" ? "bg-amber-500 text-zinc-950 font-bold shadow-md shadow-amber-500/10" : "text-zinc-500 hover:text-zinc-350"}`}
             >
-              [ INBOX_NET ]
+              [ VECTOR_SEARCH ]
             </button>
             <button 
               onClick={() => setActiveTab("split")}
               className={`py-2 rounded font-mono uppercase tracking-wider transition-all cursor-pointer ${activeTab === "split" ? "bg-amber-500 text-zinc-950 font-bold shadow-md shadow-amber-500/10" : "text-zinc-500 hover:text-zinc-350"}`}
             >
-              [ SPLIT_INBOX ]
+              [ AI_PRIORITY ]
             </button>
             <button 
               onClick={() => setActiveTab("ai")}
               className={`py-2 rounded font-mono uppercase tracking-wider transition-all cursor-pointer ${activeTab === "ai" ? "bg-amber-500 text-zinc-950 font-bold shadow-md shadow-amber-500/10" : "text-zinc-500 hover:text-zinc-350"}`}
             >
-              [ DECRYPT_AI ]
+              [ MCP_AGENT ]
             </button>
           </div>
 
@@ -678,103 +678,103 @@ export default function LandingPage() {
 
             {activeTab === "inbox" && (
               <div className="space-y-4">
-                <span className="text-[10px] font-mono font-bold text-amber-500 uppercase tracking-widest">{"// MODULE_01 // INBOX_NET"}</span>
-                <h3 className="text-lg font-bold text-zinc-150 uppercase tracking-tight">Command-Line Email Telemetry</h3>
+                <span className="text-[10px] font-mono font-bold text-amber-500 uppercase tracking-widest">{"// BONUS_01 // VECTOR_DB"}</span>
+                <h3 className="text-lg font-bold text-zinc-150 uppercase tracking-tight">Lightning-Fast Local Search</h3>
                 <p className="text-xs text-zinc-550 leading-relaxed font-sans uppercase">
-                  Triage Gmail at lightning speed. Hit keyboard hotkeys to read, archive, delete, or compose messages without picking up your mouse. Built-in indexers sync Postgres records in real-time.
+                  We added a pgvector database to the Postgres instance. Emails are cached and embedded locally, allowing semantic, lightning-fast searches across your entire history in under 1 second without hitting the Gmail API.
                 </p>
                 <div className="flex gap-4 pt-2 font-mono text-[9px] text-zinc-650">
-                  <span className="flex items-center gap-1.5"><Check size={11} className="text-amber-500" /> INSTANT SYNC</span>
-                  <span className="flex items-center gap-1.5"><Check size={11} className="text-amber-500" /> OPTIMISTIC ACTIONS</span>
+                  <span className="flex items-center gap-1.5"><Check size={11} className="text-amber-500" /> PGVECTOR EMBEDDINGS</span>
+                  <span className="flex items-center gap-1.5"><Check size={11} className="text-amber-500" /> SUB-SECOND LATENCY</span>
                 </div>
               </div>
             )}
 
             {activeTab === "split" && (
               <div className="space-y-4">
-                <span className="text-[10px] font-mono font-bold text-amber-500 uppercase tracking-widest">{"// MODULE_02 // SPLIT_INBOX"}</span>
-                <h3 className="text-lg font-bold text-zinc-150 uppercase tracking-tight">Focus Tunnels: Split Telemetry</h3>
+                <span className="text-[10px] font-mono font-bold text-amber-500 uppercase tracking-widest">{"// BONUS_02 // GROQ_LLM"}</span>
+                <h3 className="text-lg font-bold text-zinc-150 uppercase tracking-tight">Automatic AI Priority Filtering</h3>
                 <p className="text-xs text-zinc-550 leading-relaxed font-sans uppercase">
-                  Divide your email queues into multiple high-priority streams. Keep system logs, crew chat correspondence, and action items isolated. Answer the important packets without looking at secondary alerts.
+                  All synced emails are automatically passed through a lightning-fast Groq LLM to determine their priority level based on the subject and body. High-priority emails are instantly highlighted in the UI.
                 </p>
                 <div className="flex gap-4 pt-2 font-mono text-[9px] text-zinc-650">
-                  <span className="flex items-center gap-1.5"><Check size={11} className="text-amber-500" /> CUSTOM SPLIT DIRECTIVES</span>
-                  <span className="flex items-center gap-1.5"><Check size={11} className="text-amber-500" /> AUTO-PRIORITIZED VIEWS</span>
+                  <span className="flex items-center gap-1.5"><Check size={11} className="text-amber-500" /> AUTOMATIC TRIAGE</span>
+                  <span className="flex items-center gap-1.5"><Check size={11} className="text-amber-500" /> VISUAL HIGHLIGHTING</span>
                 </div>
               </div>
             )}
 
             {activeTab === "ai" && (
               <div className="space-y-4">
-                <span className="text-[10px] font-mono font-bold text-amber-500 uppercase tracking-widest">{"// MODULE_03 // DECRYPT_AI"}</span>
-                <h3 className="text-lg font-bold text-zinc-150 uppercase tracking-tight">Groq Neural Decryption</h3>
+                <span className="text-[10px] font-mono font-bold text-amber-500 uppercase tracking-widest">{"// BONUS_03 // CORSAIR_MCP"}</span>
+                <h3 className="text-lg font-bold text-zinc-150 uppercase tracking-tight">Autonomous Agent Chat</h3>
                 <p className="text-xs text-zinc-555 leading-relaxed font-sans uppercase">
-                  Trigger the cognitive assistant modal with <kbd className="px-1 py-0.5 bg-[#18161f] border border-[#232029] rounded text-[9px]">Cmd+/</kbd>. Draft replies, summarize long threads, or execute meeting creations using voice speech dictation.
+                  We integrated a dynamic AI Agent that natively parses your recent emails, extracts dates, and automatically invokes tools to schedule Google Calendar events on your behalf via chat.
                 </p>
                 <div className="flex gap-4 pt-2 font-mono text-[9px] text-zinc-650">
-                  <span className="flex items-center gap-1.5"><Check size={11} className="text-amber-500" /> SPEECH TO TEXT</span>
-                  <span className="flex items-center gap-1.5"><Check size={11} className="text-amber-500" /> GROQ COGNITIVE ENGINE</span>
+                  <span className="flex items-center gap-1.5"><Check size={11} className="text-amber-500" /> INBOX SCANNING</span>
+                  <span className="flex items-center gap-1.5"><Check size={11} className="text-amber-500" /> AUTOMATIC SCHEDULING</span>
                 </div>
               </div>
             )}
           </div>
         </section>
 
-        {/* Space Flight Social Proof Section (Apollo Inspired) */}
+        {/* Superhuman Workflow Social Proof Section */}
         <section className="w-full mt-32 space-y-12 max-w-5xl mx-auto">
           <div className="text-center space-y-2">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-amber-500">{"// flight_director_evaluations"}</h2>
-            <p className="text-xl font-bold text-zinc-150 uppercase tracking-tight">Endorsed Mission Logs</p>
+            <h2 className="text-xs font-bold uppercase tracking-widest text-amber-500">{"// workflow_evaluations"}</h2>
+            <p className="text-xl font-bold text-zinc-150 uppercase tracking-tight">Superhuman Workflows</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 font-mono">
             <div className="bg-[#121116]/50 border border-[#232029] p-6 rounded relative">
-              <span className="text-[9px] text-zinc-500 uppercase block mb-3">{"// log_entry: cmdr_h_miller"}</span>
+              <span className="text-[9px] text-zinc-500 uppercase block mb-3">{"// feature: keyboard_shortcuts"}</span>
               <p className="text-[11px] text-[#f4ebd0]/80 leading-relaxed uppercase">
-                &quot;Triaging telemetry capsule packets from Houston was taking up 3 hours per orbit. Implementing Command Inbox cut our latency down to minutes. The hotkey mappings are solid.&quot;
+                &quot;Triaging Gmail natively takes too many clicks. Implementing keyboard shortcuts and Corsair's rapid sync cuts our latency down to seconds. The hotkey mappings are solid.&quot;
               </p>
-              <div className="mt-4 text-[9px] text-amber-500/80 font-bold uppercase">{"// FLIGHT_DIRECTOR // JAP-13 MISSION"}</div>
+              <div className="mt-4 text-[9px] text-amber-500/80 font-bold uppercase">{"// BONUS_TASK // KEYSTROKES"}</div>
             </div>
 
             <div className="bg-[#121116]/50 border border-[#232029] p-6 rounded relative">
-              <span className="text-[9px] text-zinc-500 uppercase block mb-3">{"// log_entry: sys_spec_d_kemp"}</span>
+              <span className="text-[9px] text-zinc-500 uppercase block mb-3">{"// feature: autonomous_scheduling"}</span>
               <p className="text-[11px] text-[#f4ebd0]/80 leading-relaxed uppercase">
-                &quot;The neural voice decrypt module processes messy alert feeds in seconds. Reclaiming hours on data parsing lets me focus on physical hardware maintenance logs.&quot;
+                &quot;The neural voice decrypt module processes messy email threads in seconds. Reclaiming hours on data parsing and automatically scheduling events lets me focus on building.&quot;
               </p>
-              <div className="mt-4 text-[9px] text-amber-500/80 font-bold uppercase">{"// TELEMETRY_SPECIALIST // APOLLO_D_NET"}</div>
+              <div className="mt-4 text-[9px] text-amber-500/80 font-bold uppercase">{"// BONUS_TASK // MCP_AGENT"}</div>
             </div>
           </div>
         </section>
 
-        {/* Flight Architecture / How it Works */}
+        {/* Architecture / How it Works */}
         <section className="w-full mt-32 space-y-16">
           <div className="text-center space-y-2">
             <h2 className="text-xs font-bold uppercase tracking-widest text-amber-500">{"// system_architecture"}</h2>
-            <p className="text-xl font-bold text-zinc-150 uppercase tracking-tight">Telemetry Process Sequence</p>
+            <p className="text-xl font-bold text-zinc-150 uppercase tracking-tight">Corsair Architecture</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             <div className="border border-[#232029] bg-zinc-950/40 p-6 rounded relative">
               <div className="absolute top-3 right-3 text-xs font-mono text-amber-500/40 font-black">PH_01</div>
-              <h4 className="text-xs font-bold text-zinc-200 uppercase font-mono mb-3">{"// CONNECT OAUTH LINK"}</h4>
+              <h4 className="text-xs font-bold text-zinc-200 uppercase font-mono mb-3">{"// NEXT.JS + NEON POSTGRES"}</h4>
               <p className="text-[11px] text-zinc-550 leading-relaxed font-sans uppercase">
-                Authorize your Google account through OAuth client scopes directly in your browser. All data link allocations are isolated to your local environment.
+                A blazing fast Next.js 16 App Router frontend backed by a serverless Neon Postgres database, wired with Drizzle ORM for full type-safety.
               </p>
             </div>
             
             <div className="border border-[#232029] bg-zinc-950/40 p-6 rounded relative">
               <div className="absolute top-3 right-3 text-xs font-mono text-amber-500/40 font-black">PH_02</div>
-              <h4 className="text-xs font-bold text-zinc-200 uppercase font-mono mb-3">{"// SYNCHRONIZE BUFFERS"}</h4>
+              <h4 className="text-xs font-bold text-zinc-200 uppercase font-mono mb-3">{"// GMAIL & CALENDAR INTEGRATION"}</h4>
               <p className="text-[11px] text-zinc-555 leading-relaxed font-sans uppercase">
-                Our secure listener buffers pull Gmail messages and Calendar schedules directly via Corsair SDK API calls, writing metadata packets to PostgreSQL.
+                We utilize native Google APIs to sync emails and calendar events directly to Postgres, bypassing standard slow clients for a direct database-driven UI.
               </p>
             </div>
 
             <div className="border border-[#232029] bg-zinc-950/40 p-6 rounded relative">
               <div className="absolute top-3 right-3 text-xs font-mono text-amber-500/40 font-black">PH_03</div>
-              <h4 className="text-xs font-bold text-zinc-200 uppercase font-mono mb-3">{"// MUTATE AT LIGHTSPEED"}</h4>
+              <h4 className="text-xs font-bold text-zinc-200 uppercase font-mono mb-3">{"// CORSAIR & GROQ AI"}</h4>
               <p className="text-[11px] text-zinc-555 leading-relaxed font-sans uppercase">
-                Operate flight panels with instant keyboard hotkeys. Draft, schedule, sync, and mutate parameters directly on Google Workspace without page load lags.
+                We integrated Groq's Mixtral/Llama models via an MCP-style Agent to autonomously decrypt schedules, search vectors, and filter priorities at 800 tokens/sec.
               </p>
             </div>
           </div>
