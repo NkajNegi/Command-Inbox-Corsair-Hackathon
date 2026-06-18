@@ -2,7 +2,7 @@ import CalendarClient from "@/components/CalendarClient";
 import { type CalendarEvent } from "@/components/EventList";
 import { db } from "@/db";
 import { events } from "@/db/schema";
-import { asc, desc, gte } from "drizzle-orm";
+import { and, asc, desc, eq, gte } from "drizzle-orm";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 
@@ -16,12 +16,17 @@ export default async function CalendarPage() {
 
   let dbEvents: (typeof events.$inferSelect)[] = [];
   try {
-    dbEvents = await db.select().from(events).where(gte(events.endTime, new Date())).orderBy(desc(events.priorityScore), asc(events.startTime)).limit(50);
+    dbEvents = await db
+      .select()
+      .from(events)
+      .where(and(eq(events.userId, session.user.id!), gte(events.endTime, new Date())))
+      .orderBy(desc(events.priorityScore), asc(events.startTime))
+      .limit(50);
   } catch (error) {
     console.error("Database connection failed.", error);
   }
 
-  let mappedEvents: CalendarEvent[] = dbEvents.map(e => ({
+  const mappedEvents: CalendarEvent[] = dbEvents.map(e => ({
     id: e.id,
     title: e.summary,
     start: e.startTime,

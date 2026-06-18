@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean, doublePrecision, vector, index } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, boolean, doublePrecision, vector, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { jsonb, integer, primaryKey } from "drizzle-orm/pg-core";
 import type { AdapterAccountType } from "next-auth/adapters";
 
@@ -57,7 +57,7 @@ export const verificationTokens = pgTable(
 
 export const emails = pgTable("emails", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-  corsairId: text("corsair_id").unique(),
+  corsairId: text("corsair_id"),
   threadId: text("thread_id"),
   subject: text("subject").notNull(),
   snippet: text("snippet"),
@@ -75,12 +75,15 @@ export const emails = pgTable("emails", {
   // Vector embedding for pgvector (1536 dimensions for text-embedding-3-small)
   embedding: vector("embedding", { dimensions: 1536 }),
 }, (table) => ({
+  userCorsairIdIdx: uniqueIndex("emails_user_corsair_id_unique").on(table.userId, table.corsairId),
+  userInboxIdx: index("emails_user_inbox_idx").on(table.userId, table.isArchived, table.date),
+  userPriorityIdx: index("emails_user_priority_idx").on(table.userId, table.isArchived, table.priorityScore),
   embeddingIndex: index("embeddingIndex").using("hnsw", table.embedding.op("vector_cosine_ops")),
 }));
 
 export const events = pgTable("events", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-  corsairId: text("corsair_id").unique(),
+  corsairId: text("corsair_id"),
   summary: text("summary").notNull(),
   description: text("description"),
   location: text("location"),
@@ -93,7 +96,11 @@ export const events = pgTable("events", {
   priorityScore: doublePrecision("priority_score").default(0),
   userId: text("user_id").references(() => users.id).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (table) => ({
+  userCorsairIdIdx: uniqueIndex("events_user_corsair_id_unique").on(table.userId, table.corsairId),
+  userFutureEventsIdx: index("events_user_future_idx").on(table.userId, table.endTime),
+  userPriorityEventsIdx: index("events_user_priority_idx").on(table.userId, table.priorityScore),
+}));
 
 export const corsair_integrations = pgTable("corsair_integrations", {
   id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),

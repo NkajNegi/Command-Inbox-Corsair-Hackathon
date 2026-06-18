@@ -8,6 +8,13 @@
       "when": 1781669439486,
       "tag": "0000_parallel_killmonger",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1781769000000,
+      "tag": "0001_multi_user_isolation",
+      "breakpoints": true
     }
   ]
 }

@@ -130,14 +130,15 @@ export async function POST(req: Request) {
         type: "function",
         function: {
           name: "schedule_calendar_event",
-          description: "Schedule a calendar event and invite attendees using Google Calendar API",
+          description: "Schedule a personal calendar reminder by default, or invite attendees only when the user explicitly asks to send an invite",
           parameters: {
             type: "object",
             properties: {
               title: { type: "string", description: "Title/Summary of the event" },
               date: { type: "string", description: "Date of the event in YYYY-MM-DD format" },
               time: { type: "string", description: "Time of the event in HH:MM format" },
-              attendees: { type: "string", description: "Comma-separated email list of invitees" },
+              attendees: { type: "string", description: "Comma-separated email list of invitees. Leave empty for personal reminders." },
+              sendInvites: { type: "boolean", description: "Set true only when the user explicitly asks to invite or notify attendees." },
               priority: { type: "string", description: "Priority of the event: 'high' (e.g. business meetings), 'medium', or 'low' (e.g. package deliveries)" }
             },
             required: ["title", "date", "time"]
@@ -176,7 +177,7 @@ export async function POST(req: Request) {
     const messages: ChatMessage[] = [
       { 
         role: "system", 
-        content: "You are the Decrypt AI Agent for Command Inbox. You can search emails, send emails, schedule events, and check recent emails. When a user asks you to check their inbox and find schedules/meetings, call get_recent_emails first. Then, carefully parse the returned messages. If you find any events, dates, or times, automatically call schedule_calendar_event for each one. Very importantly: determine the priority ('high', 'medium', 'low') based on the email content (e.g., a business meeting is 'high' priority, a friend plan is 'medium', a package courier email is 'low'). Pass this priority to the schedule_calendar_event tool. Be brief, professional, and report what actions you have completed." 
+        content: "You are the Decrypt AI Agent for Command Inbox. You can search emails, send emails, schedule personal reminders, invite attendees, and check recent emails. When a user asks you to check their inbox and find schedules/meetings, call get_recent_emails first. Then, carefully parse the returned messages. If you find any events, dates, or times, automatically call schedule_calendar_event for each one as a personal reminder. Only set sendInvites to true if the user explicitly asks you to invite, notify, or send an invitation to attendees. Very importantly: determine the priority ('high', 'medium', 'low') based on the email content (e.g., a business meeting is 'high' priority, a friend plan is 'medium', a package courier email is 'low'). Pass this priority to the schedule_calendar_event tool. Be brief, professional, and report what actions you have completed." 
       },
       { role: "user", content: message }
     ];
@@ -206,7 +207,7 @@ export async function POST(req: Request) {
         if (functionName === "send_email") {
           result = await executeSendEmail(accessToken, args.to, args.subject, args.body);
         } else if (functionName === "schedule_calendar_event") {
-          result = await executeScheduleEvent(accessToken, session.user!.id!, args.title, args.date, args.time, args.attendees, args.priority || "medium");
+          result = await executeScheduleEvent(accessToken, session.user!.id!, args.title, args.date, args.time, args.attendees || "", args.priority || "medium", "agent-event-id-", Boolean(args.sendInvites));
         } else if (functionName === "search_emails") {
           result = await executeSearchEmails(args.query);
         } else if (functionName === "get_recent_emails") {

@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { emails } from "@/db/schema";
-import { cosineDistance, desc, sql } from "drizzle-orm";
+import { cosineDistance, desc, eq, sql } from "drizzle-orm";
 // Example vector search leveraging Drizzle ORM and Neon's native pgvector integration.
 
 export async function generateEmbedding(text: string): Promise<number[]> {
@@ -25,7 +25,7 @@ export async function generateEmbedding(text: string): Promise<number[]> {
   return data.data[0].embedding;
 }
 
-export async function searchSimilarEmails(query: string, limit = 5) {
+export async function searchSimilarEmails(query: string, userId: string, limit = 5) {
   try {
     const embedding = await generateEmbedding(query);
     
@@ -42,6 +42,7 @@ export async function searchSimilarEmails(query: string, limit = 5) {
         similarity
       })
       .from(emails)
+      .where(eq(emails.userId, userId))
       .orderBy(desc(similarity))
       .limit(limit);
 

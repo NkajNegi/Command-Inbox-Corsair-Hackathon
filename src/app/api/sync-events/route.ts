@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { events } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { getValidAccessToken } from "@/lib/googleAuth";
 
 export async function POST() {
@@ -40,7 +40,7 @@ export async function POST() {
       if (!event.id || !event.start?.dateTime || !event.end?.dateTime) continue;
 
       const existing = await db.query.events.findFirst({
-        where: eq(events.corsairId, event.id)
+        where: and(eq(events.corsairId, event.id), eq(events.userId, session.user.id))
       });
 
       if (existing) continue;

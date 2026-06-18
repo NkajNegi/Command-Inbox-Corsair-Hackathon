@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { X, Calendar as CalendarIcon, Clock, Users, MapPin } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { X, Calendar as CalendarIcon, Clock, Users, MapPin, Bell } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 /**
  * ComposeEventModal Component
- * A sleek modal to quickly draft and send a calendar invite using Corsair API.
+ * A sleek modal to quickly save reminders or send calendar invites.
  */
 export default function ComposeEventModal() {
   const [isOpen, setIsOpen] = useState(false);
@@ -15,10 +15,22 @@ export default function ComposeEventModal() {
   const [time, setTime] = useState("");
   const [id, setId] = useState<string | null>(null);
   const [attendees, setAttendees] = useState("");
-  const [inviteAttendees, setInviteAttendees] = useState(true);
+  const [location, setLocation] = useState("");
+  const [eventMode, setEventMode] = useState<"reminder" | "invite">("reminder");
+
+  const resetForm = useCallback(() => {
+    setId(null);
+    setTitle("");
+    setDate("");
+    setTime("");
+    setAttendees("");
+    setLocation("");
+    setEventMode("reminder");
+  }, []);
 
   useEffect(() => {
     const handleOpen = (e: Event) => {
+      resetForm();
       setIsOpen(true);
       const detail = (e as CustomEvent).detail;
       if (detail) {
@@ -27,11 +39,13 @@ export default function ComposeEventModal() {
         if (detail.date) setDate(detail.date);
         if (detail.time) setTime(detail.time);
         if (detail.attendees) setAttendees(detail.attendees);
+        if (detail.location) setLocation(detail.location);
+        if (detail.mode === "invite") setEventMode("invite");
       }
     };
     window.addEventListener("open-compose-event", handleOpen);
     return () => window.removeEventListener("open-compose-event", handleOpen);
-  }, []);
+  }, [resetForm]);
 
   const handleSend = async () => {
     try {
@@ -39,7 +53,15 @@ export default function ComposeEventModal() {
       await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, title, date, time, attendees: inviteAttendees ? attendees : "" }),
+        body: JSON.stringify({
+          id,
+          title,
+          date,
+          time,
+          location,
+          attendees: eventMode === "invite" ? attendees : "",
+          sendInvites: eventMode === "invite",
+        }),
       });
       // Optionally trigger a page refresh here
       window.location.reload();
@@ -47,14 +69,12 @@ export default function ComposeEventModal() {
       console.error("Error scheduling event", e);
     }
     setIsOpen(false);
-    setId(null);
-    setTitle("");
-    setDate("");
-    setTime("");
-    setAttendees("");
+    resetForm();
   };
 
   if (!isOpen) return null;
+
+  const submitLabel = id ? "Update Event" : eventMode === "invite" ? "Send Invite" : "Save Reminder";
 
   return (
     <AnimatePresence>
@@ -78,13 +98,41 @@ export default function ComposeEventModal() {
               <CalendarIcon size={18} className="text-accent" />
               {id ? "Edit Event" : "New Event"}
             </h2>
-            <button onClick={() => setIsOpen(false)} className="p-1 text-muted hover:text-foreground rounded-md transition-colors">
+            <button onClick={() => { setIsOpen(false); resetForm(); }} className="p-1 text-muted hover:text-foreground rounded-md transition-colors">
               <X size={18} />
             </button>
           </div>
 
           {/* Form Fields */}
           <div className="p-6 space-y-5 bg-background">
+            {/* Event mode */}
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setEventMode("reminder")}
+                className={`flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${
+                  eventMode === "reminder"
+                    ? "border-accent bg-accent/10 text-accent"
+                    : "border-border bg-surface text-muted hover:text-foreground"
+                }`}
+              >
+                <Bell size={14} />
+                <span>Reminder</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setEventMode("invite")}
+                className={`flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors ${
+                  eventMode === "invite"
+                    ? "border-accent bg-accent/10 text-accent"
+                    : "border-border bg-surface text-muted hover:text-foreground"
+                }`}
+              >
+                <Users size={14} />
+                <span>Invite Guests</span>
+              </button>
+            </div>
+
             {/* Title */}
             <div>
               <input 
@@ -120,29 +168,20 @@ export default function ComposeEventModal() {
             </div>
 
             {/* Attendees */}
-            <div className="flex flex-col border-b border-border focus-within:border-accent transition-colors py-2">
-              <div className="flex items-center">
-                <Users size={16} className="text-muted mr-3" />
-                <input 
-                  type="text" 
-                  placeholder="Add guests (comma separated emails)" 
-                  className="w-full bg-transparent outline-none text-sm text-foreground placeholder:text-muted/60"
-                  value={attendees}
-                  onChange={(e) => setAttendees(e.target.value)}
-                />
-              </div>
-              {attendees.length > 0 && (
-                <label className="flex items-center space-x-2 text-[11px] text-muted mt-2 ml-7 cursor-pointer">
+            {eventMode === "invite" && (
+              <div className="flex flex-col border-b border-border focus-within:border-accent transition-colors py-2">
+                <div className="flex items-center">
+                  <Users size={16} className="text-muted mr-3" />
                   <input 
-                    type="checkbox" 
-                    checked={inviteAttendees} 
-                    onChange={(e) => setInviteAttendees(e.target.checked)} 
-                    className="rounded border-border bg-transparent text-accent focus:ring-accent/50" 
+                    type="text" 
+                    placeholder="Add guests (comma separated emails)" 
+                    className="w-full bg-transparent outline-none text-sm text-foreground placeholder:text-muted/60"
+                    value={attendees}
+                    onChange={(e) => setAttendees(e.target.value)}
                   />
-                  <span>Send invitations to guests</span>
-                </label>
-              )}
-            </div>
+                </div>
+              </div>
+            )}
             
             {/* Location */}
             <div className="flex items-center border-b border-border focus-within:border-accent transition-colors py-2">
@@ -151,6 +190,8 @@ export default function ComposeEventModal() {
                 type="text" 
                 placeholder="Add location or video conferencing" 
                 className="w-full bg-transparent outline-none text-sm text-foreground placeholder:text-muted/60"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
               />
             </div>
           </div>
@@ -158,13 +199,13 @@ export default function ComposeEventModal() {
           {/* Footer Actions */}
           <div className="p-4 border-t border-border bg-surface flex items-center justify-between">
             <div className="text-xs text-muted flex items-center gap-2">
-              <span>Press <kbd className="px-1.5 py-0.5 bg-muted-bg border border-border rounded font-mono">Cmd+Enter</kbd> to send</span>
+              <span>Press <kbd className="px-1.5 py-0.5 bg-muted-bg border border-border rounded font-mono">Cmd+Enter</kbd> to save</span>
             </div>
             <button 
               onClick={handleSend}
               className="px-6 py-2 bg-accent hover:bg-accent/90 text-white rounded-lg text-sm font-medium shadow-md shadow-accent/20 transition-all active:scale-95"
             >
-              Send Invite
+              {submitLabel}
             </button>
           </div>
         </motion.div>

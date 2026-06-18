@@ -9,7 +9,8 @@ export async function executeScheduleEvent(
   time: string, 
   attendees: string, 
   priority: string = "medium",
-  corsairIdPrefix: string = "agent-event-id-"
+  corsairIdPrefix: string = "agent-event-id-",
+  sendInvites: boolean = false
 ) {
   const startDateTime = new Date(`${date}T${time}`);
   if (isNaN(startDateTime.getTime())) {
@@ -19,12 +20,16 @@ export async function executeScheduleEvent(
     startDateTime.setTime(tmr.getTime());
   }
   const endDateTime = new Date(startDateTime.getTime() + 60 * 60 * 1000); // 1 hour duration
-  const attendeesList = attendees ? attendees.split(',').map((email: string) => ({ email: email.trim() })) : [];
+  const shouldSendInvites = Boolean(sendInvites && attendees);
+  const attendeesList = shouldSendInvites
+    ? attendees.split(',').map((email: string) => ({ email: email.trim() })).filter((guest: { email: string }) => guest.email.length > 0)
+    : [];
 
   let googleEventId = corsairIdPrefix + Date.now();
   try {
     if (accessToken) {
-      const res = await fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events", {
+      const sendUpdates = shouldSendInvites ? "all" : "none";
+      const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events?sendUpdates=${sendUpdates}`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -35,7 +40,7 @@ export async function executeScheduleEvent(
           location: "",
           start: { dateTime: startDateTime.toISOString() },
           end: { dateTime: endDateTime.toISOString() },
-          attendees: attendeesList
+          ...(attendeesList.length > 0 ? { attendees: attendeesList } : {})
         })
       });
       if (res.ok) {
@@ -63,7 +68,7 @@ export async function executeScheduleEvent(
       location: "",
       startTime: startDateTime,
       endTime: endDateTime,
-      attendeesRaw: attendees || "",
+      attendeesRaw: shouldSendInvites ? attendees : "",
       priorityScore: priorityScore,
       userId: userId,
     });
@@ -71,5 +76,5 @@ export async function executeScheduleEvent(
     console.error("[EventScheduler] Failed to insert event into local DB. It might already exist.", dbError);
   }
 
-  return { success: true, message: `Calendar event scheduled and cached locally with ${priority} priority`, eventId: googleEventId };
+  return { success: true, message: `Calendar ${shouldSendInvites ? "invite" : "reminder"} scheduled and cached locally with ${priority} priority`, eventId: googleEventId };
 }

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { events } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 export async function POST(req: Request) {
   try {
@@ -12,11 +12,11 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { id, title, date, time, attendees, location } = body;
+    const { id, title, date, time, attendees, location, sendInvites } = body;
 
     // We need to fetch the event from DB to get the corsairId
     const dbEvent = await db.query.events.findFirst({
-      where: eq(events.id, id)
+      where: and(eq(events.id, id), eq(events.userId, session.user.id))
     });
 
     if (!dbEvent || !dbEvent.corsairId) {
@@ -27,7 +27,10 @@ export async function POST(req: Request) {
     const startDateTime = new Date(`${date}T${time}`);
     const endDateTime = new Date(startDateTime.getTime() + 60 * 60 * 1000); // +1 hour
 
-    const attendeesList = attendees ? attendees.split(',').map((email: string) => ({ email: email.trim() })) : [];
+    const shouldSendInvites = Boolean(sendInvites && attendees);
+    const attendeesList = shouldSendInvites
+      ? attendees.split(',').map((email: string) => ({ email: email.trim() })).filter((guest: { email: string }) => guest.email.length > 0)
+      : [];
 
     const account = await db.query.accounts.findFirst({
       where: (accounts, { and, eq }) => and(eq(accounts.userId, session.user!.id!), eq(accounts.provider, "google"))
@@ -38,7 +41,8 @@ export async function POST(req: Request) {
     if (account?.access_token) {
       const token = account.access_token;
       
-      const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${dbEvent.corsairId}`, {
+      const sendUpdates = shouldSendInvites ? "all" : "none";
+      const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${dbEvent.corsairId}?sendUpdates=${sendUpdates}`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -49,7 +53,7 @@ export async function POST(req: Request) {
           location: location || "",
           start: { dateTime: startDateTime.toISOString() },
           end: { dateTime: endDateTime.toISOString() },
-          attendees: attendeesList
+          ...(attendeesList.length > 0 ? { attendees: attendeesList } : {})
         })
       });
 
@@ -69,8 +73,8 @@ export async function POST(req: Request) {
       location: location || "",
       startTime: startDateTime,
       endTime: endDateTime,
-      attendeesRaw: attendees || ""
-    }).where(eq(events.id, id));
+      attendeesRaw: shouldSendInvites ? attendees : ""
+    }).where(and(eq(events.id, id), eq(events.userId, session.user.id)));
 
     return NextResponse.json({ success: true, event: updateResponse });
   } catch (error) {

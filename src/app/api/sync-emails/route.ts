@@ -2,9 +2,8 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/db";
 import { emails } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { getValidAccessToken } from "@/lib/googleAuth";
-import { executeScheduleEvent } from "@/lib/eventScheduler";
 import { Groq } from "groq-sdk";
 
 export const dynamic = "force-dynamic";
@@ -50,7 +49,7 @@ export async function POST() {
 
         // Check if we already have this email
         const existing = await db.query.emails.findFirst({
-          where: eq(emails.corsairId, msg.id)
+          where: and(eq(emails.corsairId, msg.id), eq(emails.userId, session.user.id))
         });
 
         if (existing) continue;

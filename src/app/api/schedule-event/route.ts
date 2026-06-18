@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { title, date, time, attendees, location } = body;
+    const { title, date, time, attendees, location, sendInvites } = body;
 
     if (!title || !date || !time) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -22,7 +22,10 @@ export async function POST(req: Request) {
     const startDateTime = new Date(`${date}T${time}`);
     const endDateTime = new Date(startDateTime.getTime() + 60 * 60 * 1000); // +1 hour
 
-    const attendeesList = attendees ? attendees.split(',').map((email: string) => ({ email: email.trim() })) : [];
+    const shouldSendInvites = Boolean(sendInvites && attendees);
+    const attendeesList = shouldSendInvites
+      ? attendees.split(',').map((email: string) => ({ email: email.trim() })).filter((guest: { email: string }) => guest.email.length > 0)
+      : [];
 
     console.log(`[Corsair SDK Execution] Inserting event to Google Calendar: ${title} at ${startDateTime.toISOString()}`);
 
@@ -32,7 +35,8 @@ export async function POST(req: Request) {
     const token = await getValidAccessToken(session.user.id);
 
     if (token) {
-      const res = await fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events", {
+      const sendUpdates = shouldSendInvites ? "all" : "none";
+      const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events?sendUpdates=${sendUpdates}`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -43,7 +47,7 @@ export async function POST(req: Request) {
           location: location || "",
           start: { dateTime: startDateTime.toISOString() },
           end: { dateTime: endDateTime.toISOString() },
-          attendees: attendeesList
+          ...(attendeesList.length > 0 ? { attendees: attendeesList } : {})
         })
       });
 
@@ -66,7 +70,7 @@ export async function POST(req: Request) {
       location: location || "",
       startTime: startDateTime,
       endTime: endDateTime,
-      attendeesRaw: attendees || "",
+      attendeesRaw: shouldSendInvites ? attendees : "",
       userId: session.user.id,
     }).returning();
 

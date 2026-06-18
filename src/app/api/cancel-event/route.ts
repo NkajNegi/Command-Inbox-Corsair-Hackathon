@@ -44,7 +44,7 @@ export async function DELETE(req: Request) {
     }
 
     // Delete from local DB
-    await db.delete(events).where(eq(events.id, eventId));
+    await db.delete(events).where(and(eq(events.id, eventId), eq(events.userId, session.user.id)));
 
     return NextResponse.json({ success: true, message: "Event cancelled successfully." });
   } catch (error) {
