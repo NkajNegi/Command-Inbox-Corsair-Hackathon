@@ -2,17 +2,16 @@ import InboxClient from "@/components/InboxClient";
 import { type Email } from "@/components/EmailList";
 import { db } from "@/db";
 import { emails } from "@/db/schema";
-import { desc, eq, and } from "drizzle-orm";
+import { desc, gte, eq, and } from "drizzle-orm";
 import { auth } from "@/auth";
-import LandingPage from "@/components/LandingPage";
+import { redirect } from "next/navigation";
 
-export const revalidate = 0; // Dynamic route to ensure fresh DB hits
+export const revalidate = 0; 
 
-export default async function InboxPage() {
+export default async function PriorityPage() {
   const session = await auth();
-
   if (!session?.user) {
-    return <LandingPage />;
+    redirect("/");
   }
 
   let dbEmails: (typeof emails.$inferSelect)[] = [];
@@ -20,11 +19,17 @@ export default async function InboxPage() {
     dbEmails = await db
       .select()
       .from(emails)
-      .where(and(eq(emails.isArchived, false), eq(emails.userId, session.user.id!)))
+      .where(
+        and(
+          eq(emails.isArchived, false),
+          eq(emails.userId, session.user.id!),
+          gte(emails.priorityScore, 0.8)
+        )
+      )
       .orderBy(desc(emails.date))
       .limit(50);
   } catch (error) {
-    console.error("Database connection failed. Ensure DATABASE_URL is set.", error);
+    console.error("Database connection failed.", error);
   }
 
   let mappedEmails: Email[] = dbEmails.map(e => ({
@@ -37,14 +42,13 @@ export default async function InboxPage() {
     priority: e.priorityScore ?? 0
   }));
 
-  // Fallback demo state if database is empty so the UI doesn't look broken
   if (mappedEmails.length === 0) {
     mappedEmails = [
       {
-        id: "demo-1",
-        subject: "Your Inbox is Connected! (Awaiting Webhooks)",
+        id: "demo-priority-1",
+        subject: "No High Priority Emails Yet",
         from: "system@corsair.dev",
-        snippet: "Your Next.js app is successfully wired to Postgres. Send a test webhook from the Corsair Dashboard to see real emails populate here instantly.",
+        snippet: "When an email comes in via webhook, our Groq AI Agent will score it. If the score is >= 0.8, it shows up here!",
         date: new Date(),
         read: false,
         priority: 0.99
