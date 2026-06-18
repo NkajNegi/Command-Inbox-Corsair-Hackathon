@@ -31,19 +31,5 @@ export default async function CalendarPage() {
     priorityScore: e.priorityScore || 0.5
   }));
 
-  if (mappedEvents.length === 0) {
-    mappedEvents = [
-      {
-        id: "demo-cal-1",
-        title: "Awaiting Corsair Webhooks",
-        start: new Date("2026-06-17T10:00:00Z"),
-        end: new Date("2026-06-17T11:00:00Z"),
-        location: "Your App",
-        attendees: ["system@corsair.dev"],
-        priorityScore: 0.5
-      }
-    ];
-  }
-
   return <CalendarClient initialEvents={mappedEvents} session={session} />;
 }
