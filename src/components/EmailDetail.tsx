@@ -161,7 +161,7 @@ export default function EmailDetail({ email, onBack, onActionComplete }: EmailDe
       </div>
 
       {/* Quick Reply Bar styled as input prompt */}
-      <div className="p-3.5 border border-[#232029] bg-[#121116]/90 backdrop-blur-md m-4 rounded flex items-center shadow-inner relative z-10 font-mono">
+      <div className="p-3.5 border border-[#232029] bg-[#121116]/90 backdrop-blur-md ml-4 mr-24 mb-4 mt-4 rounded flex items-center shadow-inner relative z-10 font-mono">
          <span className="text-amber-500 text-xs mr-3 font-bold select-none">&gt;_</span>
          <input 
            type="text" 
